@@ -1,0 +1,22 @@
+Steps:
+request certificate for IP on ubuntu
+
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes \
+  -subj "/C=US/ST=State/L=City/O=Org/CN=154.16.36.201" \
+  -addext "subjectAltName = IP:154.16.36.201"
+
+
+put cert.pem and key.pem to folder
+
+install certificate
+sudo cp cert.pem /usr/local/share/ca-certificates/my-cert.crt
+sudo cp key.pem /etc/ssl/private/my-key.pem
+sudo chmod 644 /usr/local/share/ca-certificates/my-cert.crt
+sudo chmod 600 /etc/ssl/private/my-key.pem
+
+trust certificate
+sudo cp cert.pem /usr/local/share/ca-certificates/my-self-signed.crt
+sudo update-ca-certificates
+
+curl with https:
+curl -H "X-API-Key:1234" https://154.16.36.201:58375/api/messages
