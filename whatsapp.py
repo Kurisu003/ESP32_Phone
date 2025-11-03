@@ -72,27 +72,6 @@ def _ensure_driver():
     return _driver
 
 
-# ----------------------------------------------------------------------
-# Public API – no driver argument needed
-# ----------------------------------------------------------------------
-# whatsapp.py  ←  paste this function over the old one
-def list_contacts():
-    driver = _ensure_driver()
-    with _driver_lock:
-        try:
-            # 2025 selector: every contact is inside data-list-item-id
-            items = driver.find_elements(
-                By.CSS_SELECTOR,
-                "div[data-list-item-id] span[title]"
-            )
-            contacts = [el.get_attribute("title") for el in items]
-            print(f"Found {len(contacts)} contacts")
-            return contacts
-        except Exception as e:
-            print(f"[list_contacts] {e}")
-            return []
-
-
 def _open_contact(contact_name):
     driver = _ensure_driver()
     selector = f"span[title='{contact_name}']"
@@ -139,6 +118,66 @@ def get_messages_from_contact(contact_name, max_messages=500):
             print(f"[get_messages] error: {e}")
         return msgs
 
+def list_contacts(search_prefix: str = "", max_results: int = 500) -> list[str]:
+    driver = _ensure_driver()
+
+    # Wait for the left pane to load
+    print("Waiting for chat list to load...")
+    try:
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div[aria-label='Chat list']"))
+        )
+    except:
+        raise RuntimeError("Could not find chat list. Make sure you're logged in and the sidebar is visible.")
+
+    contacts: list[str] = []  # Use list to preserve insertion order
+    seen = set()  # To avoid duplicates while keeping order
+    scroll_container = None
+
+    with _driver_lock:
+        # Find scrollable container
+        possible_containers = [
+            "div[aria-label='Chat list']",
+            "div.x1hxq9in.x6ikm8r.x1odjw0f",
+            "#pane-side",
+        ]
+        for sel in possible_containers:
+            elems = driver.find_elements(By.CSS_SELECTOR, sel)
+            if elems:
+                scroll_container = elems[0]
+                break
+        if not scroll_container:
+            raise RuntimeError("Could not locate scrollable chat container.")
+
+        last_count = 0
+        stable_rounds = 0
+
+        while len(contacts) < max_results and stable_rounds < 3:
+            # Get all visible chat titles
+            title_elements = driver.find_elements(
+                By.CSS_SELECTOR,
+                "span[dir='auto'][title]:not([title=''])"
+            )
+            for el in title_elements:
+                name = el.get_attribute("title").strip()
+                if name and name not in seen and (not search_prefix or name.lower().startswith(search_prefix.lower())):
+                    contacts.append(name)
+                    seen.add(name)
+
+            current_count = len(contacts)
+            if current_count == last_count:
+                stable_rounds += 1
+            else:
+                stable_rounds = 0
+            last_count = current_count
+
+            # Scroll down
+            driver.execute_script("""
+                arguments[0].scrollTop = arguments[0].scrollTop + arguments[0].clientHeight * 1.5;
+            """, scroll_container)
+            time.sleep(0.7)
+
+    return contacts  # ← No sorting, preserves WhatsApp's natural order
 
 def send_message_to_contact(contact_name, text):
     if not _open_contact(contact_name):
@@ -161,3 +200,15 @@ def send_message_to_contact(contact_name, text):
         except Exception as e:
             print(f"[send] error: {e}")
             return False
+
+if __name__ == "__main__":
+    start(headless=False)          # scan QR once
+    try:
+        all_contacts = list_contacts()                     # everything
+        print(f"Found {len(all_contacts)} contacts")
+        print(all_contacts)                           # first 20
+
+        friends = list_contacts(search_prefix="mein")      # only "John*"
+        print(f"Friends starting with prefix: {friends}")
+    finally:
+        stop()
