@@ -86,7 +86,6 @@ def _open_contact(contact_name):
         print(f"Contact '{contact_name}' not found.")
         return False
 
-
 def get_messages_from_contact(contact_name, max_messages=500):
     if not _open_contact(contact_name):
         return []
@@ -201,14 +200,92 @@ def send_message_to_contact(contact_name, text):
             print(f"[send] error: {e}")
             return False
 
+def has_unread_notifications() -> tuple[bool, list[str]]:
+    driver = _ensure_driver()
+
+    # -------------------------------------------------- wait for sidebar
+    WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "div[aria-label='Chat list'], #pane-side"))
+    )
+
+    # -------------------------------------------------- scroll container
+    container = None
+    for sel in ["div[aria-label='Chat list']", "#pane-side", "div[data-testid='chat-list']"]:
+        elems = driver.find_elements(By.CSS_SELECTOR, sel)
+        if elems:
+            container = elems[0]
+            break
+    if not container:
+        raise RuntimeError("Chat list container not found.")
+
+    unread_names = []
+
+    with _driver_lock:
+        # ---- find every unread badge ----
+        badges = driver.find_elements(By.CSS_SELECTOR, "span[aria-label*='unread' i]")
+        print(f"[DEBUG] Found {len(badges)} badge(s)")
+
+        for idx, badge in enumerate(badges):
+            try:
+                label = badge.get_attribute("aria-label")
+                print(f"  [{idx}] {label}")
+
+        # from this badge go up 5 parents,
+        # then into the next div and read
+        # <span dir="auto" title="Student Living Center" style="min-height: 0px;" class="x1iyjqo2 x6ikm8r x10wlt62 x1n2onr6 xlyipyv xuxw1ft x1rg5ohu x1jchvi3 xjb2p0i xo1l8bm x17mssa0 x1ic7a3i _ao3e">Student Living Center</span>
+
+        # Traverse up 5 parent elements to reach the chat row
+                parent = badge
+                for _ in range(5):
+                    parent = parent.find_element(By.XPATH, "..")
+                    if not parent:
+                        print(f"    [WARN] Failed to go up 5 parents for badge {idx}")
+                        break
+
+                # From that row, find the chat name span (usually the next relevant div with title/text)
+                name_span = parent.find_element(
+                    By.CSS_SELECTOR,
+                    "span[dir='auto'][title]"
+                )
+                chat_name = name_span.get_attribute("title").strip()
+                unread_names.append(chat_name)
+                print(chat_name)
+
+            except Exception as e:
+                print(f"    → error: {e}")
+
+
+
+    amount = len(badges)-1
+    if (amount < 0):
+        amount = 0
+    return amount, unread_names
+
 if __name__ == "__main__":
     start(headless=False)          # scan QR once
-    try:
-        all_contacts = list_contacts()                     # everything
-        print(f"Found {len(all_contacts)} contacts")
-        print(all_contacts)                           # first 20
+    # List contacts
+    # try:
+    #     all_contacts = list_contacts()                     # everything
+    #     print(f"Found {len(all_contacts)} contacts")
+    #     print(all_contacts)                           # first 20
 
-        friends = list_contacts(search_prefix="mein")      # only "John*"
-        print(f"Friends starting with prefix: {friends}")
+    #     friends = list_contacts(search_prefix="mein")      # only "John*"
+    #     print(f"Friends starting with prefix: {friends}")
+    # finally:
+    #     stop()
+
+    
+    try:
+        has_unread, who = has_unread_notifications()
+        if has_unread:
+            print(f"You have {len(who)} unread message(s) from:")
+            for name in who:
+                print(f"  • {name}")
+        else:
+            print("No unread messages.")
+
+        while(True):
+            a = 1
+            # print()
     finally:
         stop()
