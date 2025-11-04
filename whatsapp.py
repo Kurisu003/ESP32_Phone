@@ -261,7 +261,7 @@ def has_unread_notifications() -> tuple[bool, list[str]]:
         amount = 0
     return amount, unread_names
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     start(headless=False)          # scan QR once
     # List contacts
     # try:
@@ -274,18 +274,18 @@ if __name__ == "__main__":
     # finally:
     #     stop()
 
-    
-    try:
-        has_unread, who = has_unread_notifications()
-        if has_unread:
-            print(f"You have {len(who)} unread message(s) from:")
-            for name in who:
-                print(f"  • {name}")
-        else:
-            print("No unread messages.")
 
-        while(True):
-            a = 1
-            # print()
-    finally:
-        stop()
+    # try:
+    #     has_unread, who = has_unread_notifications()
+    #     if has_unread:
+    #         print(f"You have {len(who)} unread message(s) from:")
+    #         for name in who:
+    #             print(f"  • {name}")
+    #     else:
+    #         print("No unread messages.")
+
+    #     while(True):
+    #         a = 1
+    #         # print()
+    # finally:
+    #     stop()

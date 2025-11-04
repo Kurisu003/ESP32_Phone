@@ -19,26 +19,58 @@ def api_key_is_correct(client_key):
     return True
 
 
-@app.route('/api/messages', methods=['GET'])
-def get_messages():
+@app.route('/api/get_contacts', methods=['GET'])
+def get_contacts():
     client_key = request.headers.get('X-API-Key')
     try:
         if not api_key_is_correct(client_key):
             return jsonify([{"failed":"failed"}])
 
-        msgs = whatsapp.get_messages_from_contact("Elmar")
-        print(f"\nFound {len(msgs)} contacts:")
+        contacts = whatsapp.list_contacts()
+        print(f"\nFound {len(contacts)} contacts:")
+        for c in contacts[:10]:          # show first 10
+            print("  •", c)
+        return jsonify(contacts)
+
+
+    except:
+        return jsonify([{"failed":"failed"}])
+
+@app.route('/api/messages_from_contact/<contact_id>', methods=['GET'])
+def messages_from_contact(contact_id):
+    client_key = request.headers.get('X-API-Key')
+    try:
+        if not api_key_is_correct(client_key):
+            return jsonify([{"failed":"failed"}])
+
+        msgs = whatsapp.get_messages_from_contact(contact_id)
+        print(f"\nFound {len(msgs)} messages:")
         for c in msgs[:10]:          # show first 10
             print("  •", c)
-        return jsonify([{"Success":"Success"}])
+        return jsonify(msgs)
 
 
     except:
         return jsonify([{"failed":"failed"}])
 
 
-@app.route('/api/send_message', methods=['POST'])
-def send_message():
+@app.route('/api/get_unreads', methods=['GET'])
+def get_unreads():
+    client_key = request.headers.get('X-API-Key')
+    try:
+        if not api_key_is_correct(client_key):
+            return jsonify([{"failed":"failed"}])
+
+        has_unread, who = whatsapp.has_unread_notifications()
+        return jsonify([has_unread, who])
+
+
+    except:
+        return jsonify([{"failed":"failed"}])
+
+
+@app.route('/api/send_message_to_contact', methods=['POST'])
+def send_message_to_contact():
     client_key = request.headers.get('X-API-Key')
 
     try:
@@ -60,11 +92,12 @@ def start_thread():
     thread.start()
 
 if __name__ == '__main__':
+    print(encrypt_data(api_key,api_encryption_key))
     start_thread()
     context = ('cert.pem', 'key.pem')  # (cert, key)
     app.run(
         host='0.0.0.0',
-        port=58375,
+        port=36596,
         debug=False,
         ssl_context=context
     )
