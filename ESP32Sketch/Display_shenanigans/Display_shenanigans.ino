@@ -1,5 +1,6 @@
 #include <TFT_eSPI.h> // Hardware-specific library
 #include <SPI.h>
+#include "whatsapp.h"
 
 TFT_eSPI tft = TFT_eSPI();       // Invoke custom library
 
@@ -14,9 +15,19 @@ const String my_apps[] = {
 
 int my_apps_length = sizeof(my_apps)/sizeof(my_apps[0]);
 
+
 void setup(void) {
   Serial.begin(9600);
 
+  const char* ssid     = "Wi-Find You Cute 2.4 GHz";
+  const char* password = "Minecraft123!";
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    tft.setCursor(0, 0);
+    tft.print("Connecting to WiFi...");
+  }
+  
 
   // Use this initializer if you're using a 1.8" TFT
   tft.init();   // initialize a ST7735S chip
@@ -43,9 +54,11 @@ void setup(void) {
   // tft.fillTriangle(0, 0, 100, 0, 50, 50, TFT_BLUE);
 
   // tft.drawRoundRect(x, y, w, h, 5, color);
+  whatsapp_main();
 }
 
-void drawApp(String name, int x, int y, bool is_selected){
+void drawApp(String name, int x, int index, bool is_selected){
+  int y = (index*20)+5;
   if (is_selected){
     tft.drawRect(x, y, 70, 18, TFT_BLUE);
   }
@@ -59,14 +72,14 @@ void drawApp(String name, int x, int y, bool is_selected){
 
 void draw_apps_loop(){
   for(int i = 0; i < my_apps_length; i++){
-    drawApp(my_apps[i], 5, (i*20)+5, i == selected_app);
+    drawApp(my_apps[i], 5, i, i == selected_app);
   }
 }
 
 void loop() {
-  selected_app += 1;
-  selected_app %= my_apps_length;
-  draw_apps_loop();
-  delay(500);
+  // selected_app += 1;
+  // selected_app %= my_apps_length;
+  // draw_apps_loop();
+  // delay(500);
 }
 

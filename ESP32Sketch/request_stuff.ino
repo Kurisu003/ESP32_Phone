@@ -12,7 +12,7 @@ const char* serverUrl = "https://154.16.36.201:36596/api/get_contacts";   // <--
 const char* getRequest = "https://154.16.36.201:36596/api/get_contacts";   // <-- change path if needed
 
 // ---------- Root-CA certificate (the one you gave) ----------
-// const char* root_ca = 
+// const char* root_ca =
 // "-----BEGIN CERTIFICATE-----\n"
 // "MIIDljCCAn6gAwIBAgIUKAaBJpqw2FeSRnMCEpkvbLVJQakwDQYJKoZIhvcNAQEL\n"
 // "BQAwUjELMAkGA1UEBhMCVVMxDjAMBgNVBAgMBVN0YXRlMQ0wCwYDVQQHDARDaXR5\n"
@@ -39,8 +39,8 @@ const char* getRequest = "https://154.16.36.201:36596/api/get_contacts";   // <-
 void setup() {
   Serial.begin(115200);
   // delay(1000);
-  // const char* encrypted_api_key = "6Y/2RcOyPX3cgpPY3BFvfXs/amLBS9Mgue/9Os8=";
-  // const String encrypted_api_key_str = "6Y/2RcOyPX3cgpPY3BFvfXs/amLBS9Mgue/9Os8=";
+  const char* encrypted_api_key = "6Y/2RcOyPX3cgpPY3BFvfXs/amLBS9Mgue/9Os8=";
+  const String encrypted_api_key_str = "6Y/2RcOyPX3cgpPY3BFvfXs/amLBS9Mgue/9Os8=";
 
   // // ---- Connect to Wi-Fi ----
   // Serial.printf("\nConnecting to %s ", ssid);
@@ -52,13 +52,13 @@ void setup() {
   // Serial.println("\nWiFi connected, IP: " + WiFi.localIP().toString());
 
   // // ---- Send HTTPS POST ----
-  // Serial.println("\nAnswer:" + sendHttpsGet(getRequest, encrypted_api_key));
+  Serial.println("\nAnswer:" + sendHttpsGet(getRequest, encrypted_api_key));
 
-  
-  // String CONTACT = "Test";
-  // String MESSAGE = "Hello from ESP32!";
 
-  // sendHttpsPost(CONTACT, MESSAGE, encrypted_api_key_str);
+  String CONTACT = "Test";
+  String MESSAGE = "Hello from ESP32!";
+
+  sendHttpsPost(CONTACT, MESSAGE, encrypted_api_key_str);
 }
 
 void loop() {
@@ -127,9 +127,9 @@ void loop() {
 //   char timestamp[25];
 //   snprintf(timestamp, sizeof(timestamp), "%04d-%02d-%02dT%02d:00:00Z", 2025, 11, 4, 12); // Example
 
-//   String payload = "{\"role\": \"user\", \"content\": {\"contact\": \"" + contact + 
-//                    "\", \"message\": \"" + message + 
-//                    "\"}, \"metadata\": {\"source\": \"arduino\", \"timestamp\": \"" + 
+//   String payload = "{\"role\": \"user\", \"content\": {\"contact\": \"" + contact +
+//                    "\", \"message\": \"" + message +
+//                    "\"}, \"metadata\": {\"source\": \"arduino\", \"timestamp\": \"" +
 //                    String(timestamp) + "\"}}";
 
 //   int code = https.POST(payload);
