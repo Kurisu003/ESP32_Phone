@@ -4,6 +4,8 @@ from server_crypto import decrypt_data, encrypt_data
 import whatsapp
 import time
 from flask import Flask, jsonify, request
+import re
+import unicodedata
 
 app = Flask(__name__)
 
@@ -11,6 +13,30 @@ app = Flask(__name__)
 api_encryption_key = "b"
 # api_key = "wQHctnYmzu54VCHv84yeArE3udSdnoa80wPIczWzLfdEsoPhfnUmZo10laDG15H3"
 api_key = "a"
+
+def clean_string(s: str) -> str:
+    # Step 1: Replace common umlauts
+    umlaut_map = {
+        'ä': 'ae', 'Ä': 'Ae',
+        'ö': 'oe', 'Ö': 'Oe',
+        'ü': 'ue', 'Ü': 'Ue',
+        'ß': 'ss'
+    }
+    for umlaut, replacement in umlaut_map.items():
+        s = s.replace(umlaut, replacement)
+
+    # Step 2: Normalize unicode (handles composed chars)
+    s = unicodedata.normalize('NFKD', s)
+
+    # Step 3: Remove emojis and non-alphanumeric / basic punctuation
+    # Keep letters, numbers, spaces, and common punctuation: .,!?()-
+    s = re.sub(r'[^\w\s\.\,\!\?\(\)\-]', '', s)
+
+    # Step 4: Strip whitespace and return
+    return s.strip()
+
+def clean_list(strings: list[str]) -> list[str]:
+    return [clean_string(s) for s in strings]
 
 def api_key_is_correct(client_key):
     decrypted_client_key = str(decrypt_data(client_key, api_encryption_key))
@@ -27,10 +53,7 @@ def get_contacts():
             return jsonify([{"failed":"failed"}])
 
         contacts = whatsapp.list_contacts()
-        print(f"\nFound {len(contacts)} contacts:")
-        for c in contacts[:10]:          # show first 10
-            print("  •", c)
-        return jsonify(contacts)
+        return jsonify(clean_list(contacts))
 
 
     except:
