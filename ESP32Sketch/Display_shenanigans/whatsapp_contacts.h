@@ -40,14 +40,14 @@ void init_contacts(){
   tft.setTextSize(1);
   tft.setCursor(0, 0);
 
-  String response = sendHttpsGet("https://154.16.36.201:36596/api/get_contacts", encrypted_api_key);
+  String response = sendHttpsGet("https://154.16.36.201:29793/api/get_contacts", encrypted_api_key);
 
   if (response.length() == 0) {
     tft.fillScreen(TFT_BLACK);
 
     tft.setCursor(0, 0);
     tft.print("No response");
-    return;
+    while(1){}
   }
 
   // vector<String> contacts = parseJsonArray(response);
@@ -69,7 +69,6 @@ void draw_contacts(){
   }
 
   // Displays 8 contacts per page
-  // TODO: Implement selected contact
   int page = selected_contact/8;
   for (size_t i = page * 8; i < min(contacts.size(), (size_t)8 + page * 8) ; i++) {
     display_contact(5, i, contacts[i].c_str(), selected_contact, page);
@@ -85,7 +84,6 @@ void whatsapp_main() {
   bool currentState;
 
   while(1) {
-    // --- Eingabe so oft wie möglich prüfen ---
     currentState = digitalRead(13);
 
     // only redraw if something happened
