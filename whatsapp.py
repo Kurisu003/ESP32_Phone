@@ -86,6 +86,30 @@ def _open_contact(contact_name):
         print(f"Contact '{contact_name}' not found.")
         return False
 
+def _wrap_text(text, width=16):
+    """Insert \n after every `width` characters, keeping words intact."""
+    if not text:
+        return "", 0
+    words = text.split()
+    lines = []
+    current = ""
+    for word in words:
+        added_space = 1 if current else 0
+        if len(current) + added_space + len(word) <= width:
+            current = (current + " ") if current else current
+            current += word
+        else:
+            if current:
+                lines.append(current)
+            current = word
+            while len(current) > width:
+                lines.append(current[:width])
+                current = current[width:]
+    if current:
+        lines.append(current)
+    wrapped = "\n".join(lines)
+    return wrapped, len(lines)
+
 def get_messages_from_contact(contact_name, max_messages=500):
     if not _open_contact(contact_name):
         return []
@@ -102,15 +126,17 @@ def get_messages_from_contact(contact_name, max_messages=500):
                 try:
                     out = "message-out" in b.get_attribute("class")
                     sender = "You" if out else contact_name
-                    txt = " ".join(
+                    txt_parts = [
                         t.text.strip()
                         for t in b.find_elements(By.CSS_SELECTOR, "span.selectable-text span")
                         if t.text.strip()
-                    )
+                    ]
+                    txt = " ".join(txt_parts)
                     img = bool(b.find_elements(By.CSS_SELECTOR, "img, div[data-animate='true']"))
                     final = f"{txt} [img]" if img and txt else txt or "[img]"
                     if final:
-                        msgs.append((sender, final))
+                        wrapped, line_count = _wrap_text(final)
+                        msgs.append([sender, wrapped, line_count])
                 except:
                     continue
         except Exception as e:

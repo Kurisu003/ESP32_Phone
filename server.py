@@ -68,8 +68,7 @@ def messages_from_contact(contact_id):
 
         msgs = whatsapp.get_messages_from_contact(contact_id)
         print(f"\nFound {len(msgs)} messages:")
-        for c in msgs[:10]:          # show first 10
-            print("  •", c)
+        print(msgs)    # show first 10
         return jsonify(msgs)
 
 
