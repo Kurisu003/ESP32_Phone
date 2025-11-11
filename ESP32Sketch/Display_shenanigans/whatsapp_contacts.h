@@ -63,7 +63,6 @@ void init_contacts(){
 void draw_contacts(){
   tft.fillScreen(TFT_BLACK);
 
-
   tft.setCursor(0, 0);
 
   if (contacts.empty()) {
@@ -76,23 +75,29 @@ void draw_contacts(){
   for (size_t i = page * 8; i < min(contacts.size(), (size_t)8 + page * 8) ; i++) {
     display_contact(5, i, contacts[i].c_str(), selected_contact, page);
   }
+
+  tft.setCursor(100, 5);
+  tft.print(page + 1);
+  tft.print("/");
+  tft.print(int(ceil(contacts.size() / 8.0)));
+  
+
+}
+
+void init_disp_contacts(){
+  keypadInit();
+  init_contacts();
+  draw_contacts();
 }
 
 void whatsapp_main() {
  
-  keypadInit();
-  init_contacts();
-  draw_contacts();
-
+  init_disp_contacts();
 
   int last_contact = 0;
 
   while(1) {
     char key = keypadGetKey();
-    // if (key != '\0'){
-    //   printf("%c", key);
-    //   printf("\t%d\n", key);
-    // }
 
     if(key == '2')
       selected_contact --;
@@ -102,8 +107,10 @@ void whatsapp_main() {
       selected_contact += 8;
     else if(key == '4')
       selected_contact -= 8;
-    else if(key == '5')
+    else if(key == '5'){
       whatsapp_chat(contacts[selected_contact].c_str());
+      init_disp_contacts();
+    }
 
     selected_contact %= contacts.size();
 
@@ -111,6 +118,7 @@ void whatsapp_main() {
     if (last_contact != selected_contact) {
       draw_contacts();
     }
+
     last_contact = selected_contact;
   }
 }

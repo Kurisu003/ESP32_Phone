@@ -68,7 +68,9 @@ void init_chat(const char* contact) {
         }
     }
 
-    scroll_pos = max(0, (int)all_lines.size() - 20);  // Start at bottom
+    // scroll_pos = max(0, (int)all_lines.size() - 20);  // Start at bottom
+    int visible_lines = (tft.height() - 30) / 10;
+    scroll_pos = max(0, (int)all_lines.size() - visible_lines);
 }
 
 void render_screen() {
@@ -100,14 +102,14 @@ void whatsapp_chat(const char* contact) {
     const char* t9map[10] = {
         "",     // 0
         "",     // 1 (unused)
-        "ABC",  // 2
-        "DEF",  // 3
-        "GHI",  // 4
-        "JKL",  // 5
-        "MNO",  // 6
-        "PQRS", // 7
-        "TUV",  // 8
-        "WXYZ"  // 9
+        "abc012",  // 2
+        "def3",  // 3
+        "ghi4",  // 4
+        "jkl5",  // 5
+        "mno6",  // 6
+        "pqrs7", // 7
+        "tuv8",  // 8
+        "wxyz9"  // 9
     };
 
     init_chat(contact);
@@ -130,6 +132,8 @@ void whatsapp_chat(const char* contact) {
 
         // Scroll UP (show older messages)
         if (!type_mode){
+            if (key == '*')
+                return;
             if (key == '2') {
                 if (scroll_pos > 0) {
                     scroll_pos--;
@@ -139,7 +143,8 @@ void whatsapp_chat(const char* contact) {
 
             // Scroll DOWN (show newer messages)
             if (key == '8') {
-                int max_scroll = max(0, (int)all_lines.size() - (tft.height() / 10));
+                int visible_lines = (tft.height() - 30) / 10;
+                int max_scroll = max(0, (int)all_lines.size() - visible_lines);
                 if (scroll_pos < max_scroll) {
                     scroll_pos++;
                     render_screen();
@@ -193,6 +198,7 @@ void whatsapp_chat(const char* contact) {
                 // whatsapp_chat(contact);
                 currentText = "";
                 init_chat(contact);
+                render_screen();
             }
 
             // Commit last character automatically after timeout
