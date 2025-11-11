@@ -1,5 +1,6 @@
 #include "HttpsUtils.h"
 #include "helpers.h"
+#include "input.h"
 #include "whatsapp_chat.h"
 #include <TFT_eSPI.h>
 #include <SPI.h>
@@ -10,6 +11,8 @@
 using namespace std;  // <-- So we can use vector<String>
 
 extern TFT_eSPI tft;
+
+
 
 // char* encrypted_api_key = "6Y/2RcOyPX3cgpPY3BFvfXs/amLBS9Mgue/9Os8=";
 int selected_contact = 0;
@@ -40,7 +43,7 @@ void init_contacts(){
   tft.setTextSize(1);
   tft.setCursor(0, 0);
 
-  String response = sendHttpsGet("https://154.16.36.201:29793/api/get_contacts", encrypted_api_key);
+  String response = sendHttpsGet("https://154.16.36.201:40837/api/get_contacts", encrypted_api_key);
 
   if (response.length() == 0) {
     tft.fillScreen(TFT_BLACK);
@@ -77,24 +80,37 @@ void draw_contacts(){
 
 void whatsapp_main() {
  
+  keypadInit();
   init_contacts();
   draw_contacts();
 
-  bool lastState = LOW;
-  bool currentState;
+
+  int last_contact = 0;
 
   while(1) {
-    currentState = digitalRead(13);
+    char key = keypadGetKey();
+    // if (key != '\0'){
+    //   printf("%c", key);
+    //   printf("\t%d\n", key);
+    // }
+
+    if(key == '2')
+      selected_contact --;
+    else if(key == 56)
+      selected_contact ++;
+    else if(key == '6')
+      selected_contact += 8;
+    else if(key == '4')
+      selected_contact -= 8;
+    else if(key == '5')
+      whatsapp_chat(contacts[selected_contact].c_str());
+
+    selected_contact %= contacts.size();
 
     // only redraw if something happened
-    if (lastState == LOW && currentState == HIGH) {
-      selected_contact = (selected_contact + 1) % contacts.size();
+    if (last_contact != selected_contact) {
       draw_contacts();
     }
-    lastState = currentState;
-
-    if(digitalRead(27)){
-      whatsapp_chat(contacts[selected_contact].c_str());
-    }
+    last_contact = selected_contact;
   }
 }

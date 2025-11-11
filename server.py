@@ -119,7 +119,7 @@ if __name__ == '__main__':
     context = ('cert.pem', 'key.pem')  # (cert, key)
     app.run(
         host='0.0.0.0',
-        port=29793,
+        port=40837,
         debug=False,
         ssl_context=context
     )

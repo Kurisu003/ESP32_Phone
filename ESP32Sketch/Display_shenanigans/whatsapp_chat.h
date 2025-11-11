@@ -27,7 +27,7 @@ void init_chat(const char* contact) {
     tft.setTextColor(TFT_WHITE);
     tft.setTextSize(1);
 
-    String url = "https://154.16.36.201:29793/api/messages_from_contact/" + String(contact);
+    String url = "https://154.16.36.201:40837/api/messages_from_contact/" + String(contact);
     String response = sendHttpsGet(url.c_str(), encrypted_api_key);
 
     if (response.length() == 0) {
