@@ -75,7 +75,7 @@ void render_screen() {
     tft.fillScreen(TFT_BLACK);
     int y = 0;
     const int line_h = 10;
-    int max_lines = tft.height() / line_h;
+    int max_lines = (tft.height()-30) / line_h;
 
     for (int i = 0; i < max_lines && scroll_pos + i < all_lines.size(); i++) {
         const auto& line = all_lines[scroll_pos + i];
@@ -87,10 +87,31 @@ void render_screen() {
 }
 
 void whatsapp_chat(const char* contact) {
-    pinMode(PIN_UP, INPUT_PULLDOWN);
-    pinMode(PIN_DOWN, INPUT_PULLDOWN);
+    
+    bool type_mode = false;
+
+    static char lastKey = 0;
+    static unsigned long lastPressTime = 0;
+    static int pressCount = 0;
+    static String currentText = "";
+    const unsigned long multiTapTimeout = 800; // ms before committing a letter
+
+    // Mapping for T9 keys
+    const char* t9map[10] = {
+        "",     // 0
+        "",     // 1 (unused)
+        "ABC",  // 2
+        "DEF",  // 3
+        "GHI",  // 4
+        "JKL",  // 5
+        "MNO",  // 6
+        "PQRS", // 7
+        "TUV",  // 8
+        "WXYZ"  // 9
+    };
 
     init_chat(contact);
+    String current_user_message;
 
     if (all_lines.empty()) {
         tft.setCursor(0, 0);
@@ -101,26 +122,94 @@ void whatsapp_chat(const char* contact) {
     render_screen();
 
     while (1) {
-        unsigned long now = millis();
+        char key = keypadGetKey();
+
+
+        if (key == '#')
+            type_mode = !type_mode;
 
         // Scroll UP (show older messages)
-        if (digitalRead(PIN_UP) == HIGH && now - last_up > DEBOUNCE) {
-            last_up = now;
-            if (scroll_pos > 0) {
-                scroll_pos--;
-                render_screen();
+        if (!type_mode){
+            if (key == '2') {
+                if (scroll_pos > 0) {
+                    scroll_pos--;
+                    render_screen();
+                }
+            }
+
+            // Scroll DOWN (show newer messages)
+            if (key == '8') {
+                int max_scroll = max(0, (int)all_lines.size() - (tft.height() / 10));
+                if (scroll_pos < max_scroll) {
+                    scroll_pos++;
+                    render_screen();
+                }
+            }
+        }
+        else{
+            if (key >= '2' && key <= '9') {
+                unsigned long now = millis();
+
+                if (key == lastKey && (now - lastPressTime) < multiTapTimeout) {
+                    // Cycle to next letter on same key
+                    pressCount++;
+                    const char* letters = t9map[key - '0'];
+                    int numLetters = strlen(letters);
+                    if (numLetters > 0) {
+                        currentText[currentText.length() - 1] = letters[pressCount % numLetters];
+                    }
+                } else {
+                    // New key or timeout → commit previous letter and start a new one
+                    pressCount = 0;
+                    const char* letters = t9map[key - '0'];
+                    if (strlen(letters) > 0)
+                        currentText += letters[0];
+                }
+
+                lastPressTime = now;
+                lastKey = key;
+                
+                // render_text(currentText); // Your function to update display
+            }
+            if (key == '*') {
+                if (currentText.length() > 0) {
+                    currentText.remove(currentText.length() - 1);
+                    // render_text(currentText);
+                }
+                lastKey = 0; // reset so it doesn't interfere with cycling
+                pressCount = 0;
+            }
+            
+            if (key == '0') {
+                currentText += ' ';
+                lastKey = 0;
+                pressCount = 0;
+            }
+
+            if (key == '1'){
+                sendHttpsPost(contact, currentText, encrypted_api_key);
+                delay(100);
+                // function calls itself to re-init everything after sending
+                // whatsapp_chat(contact);
+                currentText = "";
+                init_chat(contact);
+            }
+
+            // Commit last character automatically after timeout
+            if (lastKey && (millis() - lastPressTime) > multiTapTimeout) {
+                lastKey = 0;
+                pressCount = 0;
             }
         }
 
-        // Scroll DOWN (show newer messages)
-        if (digitalRead(PIN_DOWN) == HIGH && now - last_down > DEBOUNCE) {
-            last_down = now;
-            int max_scroll = max(0, (int)all_lines.size() - (tft.height() / 10));
-            if (scroll_pos < max_scroll) {
-                scroll_pos++;
-                render_screen();
-            }
-        }
+        tft.fillRect(0, 130, 128, 30, TFT_BLACK);
+        if(type_mode)
+            tft.drawRect(0, 130, 128, 30, TFT_BLUE);
+        else
+            tft.drawRect(0, 130, 128, 30, TFT_WHITE);
+
+        tft.setCursor(2, 132);
+        tft.print(currentText);
 
         delay(10);
     }
