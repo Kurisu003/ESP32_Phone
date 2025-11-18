@@ -21,14 +21,16 @@ struct ChatLine {
 std::vector<ChatLine> all_lines;
 int scroll_pos = 0;
 unsigned long last_up = 0, last_down = 0;
+unsigned int refetch_message_counter = 0;
 
 void init_chat(const char* contact) {
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_WHITE);
-    tft.setTextSize(1);
 
     String url = "https://154.16.36.201:40837/api/messages_from_contact/" + String(contact);
     String response = sendHttpsGet(url.c_str(), encrypted_api_key);
+
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_WHITE);
+    tft.setTextSize(1);
 
     if (response.length() == 0) {
         tft.setCursor(0, 0);
@@ -88,6 +90,11 @@ void render_screen() {
     }
 }
 
+void fresh_chat_init(const char* contact){
+    init_chat(contact);
+    render_screen();
+}
+
 void whatsapp_chat(const char* contact) {
     
     bool type_mode = false;
@@ -102,8 +109,8 @@ void whatsapp_chat(const char* contact) {
     const char* t9map[10] = {
         "",     // 0
         "",     // 1 (unused)
-        "abc012",  // 2
-        "def3",  // 3
+        "abc01",  // 2
+        "def23",  // 3
         "ghi4",  // 4
         "jkl5",  // 5
         "mno6",  // 6
@@ -191,14 +198,11 @@ void whatsapp_chat(const char* contact) {
                 pressCount = 0;
             }
 
+            // Send message
             if (key == '1'){
                 sendHttpsPost(contact, currentText, encrypted_api_key);
-                delay(100);
-                // function calls itself to re-init everything after sending
-                // whatsapp_chat(contact);
+                fresh_chat_init(contact);
                 currentText = "";
-                init_chat(contact);
-                render_screen();
             }
 
             // Commit last character automatically after timeout
@@ -218,5 +222,10 @@ void whatsapp_chat(const char* contact) {
         tft.print(currentText);
 
         delay(10);
+        refetch_message_counter++;
+        if (refetch_message_counter % 10000 == 0){
+            refetch_message_counter = 0;
+            fresh_chat_init(contact);
+        }
     }
 }

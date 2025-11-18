@@ -84,7 +84,8 @@ def get_unreads():
             return jsonify([{"failed":"failed"}])
 
         has_unread, who = whatsapp.has_unread_notifications()
-        return jsonify([has_unread, who])
+        # return jsonify([has_unread, who])
+        return jsonify(clean_list(who))
 
 
     except:

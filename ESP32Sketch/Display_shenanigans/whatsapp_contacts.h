@@ -18,7 +18,7 @@ extern TFT_eSPI tft;
 int selected_contact = 0;
 vector<String> contacts;
 
-void display_contact(int x, int index, const char* contact, int selected_contact, int page){
+void display_contact(int x, int index, const char* contact, int selected_contact, int page, bool is_unread){
   // index used so the display draws correctly
   int index_for_draw = index-page*8;
   int y = (index_for_draw*20);
@@ -27,6 +27,9 @@ void display_contact(int x, int index, const char* contact, int selected_contact
   }
   else{
     tft.drawRect(x, y, 70, 18, TFT_WHITE);
+  }
+  if (is_unread){
+    tft.fillCircle(x+70, y, 3, TFT_BLUE);
   }
 
   char buffer[11];  // 10 chars + null terminator
@@ -61,8 +64,12 @@ void init_contacts(){
 
 
 void draw_contacts(){
-  tft.fillScreen(TFT_BLACK);
 
+  String url = "https://154.16.36.201:40837/api/get_unreads";
+  String response = sendHttpsGet(url.c_str(), encrypted_api_key);
+  vector<String> unread_contacts = parseJsonArray(response);
+
+  tft.fillScreen(TFT_BLACK);
   tft.setCursor(0, 0);
 
   if (contacts.empty()) {
@@ -73,7 +80,9 @@ void draw_contacts(){
   // Displays 8 contacts per page
   int page = selected_contact/8;
   for (size_t i = page * 8; i < min(contacts.size(), (size_t)8 + page * 8) ; i++) {
-    display_contact(5, i, contacts[i].c_str(), selected_contact, page);
+    bool is_unread = std::find(unread_contacts.begin(), unread_contacts.end(), contacts[i]) != unread_contacts.end();
+    display_contact(5, i, contacts[i].c_str(), selected_contact, page, is_unread);
+    // display_contact(5, i, contacts[i].c_str(), selected_contact, page);
   }
 
   tft.setCursor(100, 5);
