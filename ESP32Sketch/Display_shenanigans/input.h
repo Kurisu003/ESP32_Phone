@@ -1,5 +1,5 @@
 #include <Arduino.h>
-
+#include "variables.h"
 // Pin definitions for ESP32
 const int COL2 = 13;  // D13 -> Column 2
 const int ROW1 = 12;  // D12 -> Row 1

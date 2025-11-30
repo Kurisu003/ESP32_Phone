@@ -6,7 +6,9 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
-char* encrypted_api_key = "6Y/2RcOyPX3cgpPY3BFvfXs/amLBS9Mgue/9Os8=";
+#include "sim_shenanigans.h"
+
+#include "variables.h"
 
 // ---------------------------------------------------------------------------
 // Put your server’s root CA certificate here (PEM format, keep the \n)
@@ -41,12 +43,18 @@ const char *root_ca =
 String sendHttpsGet(const char *url, const char *api_key)
 {
     String response = "";
-    if (WiFi.status() != WL_CONNECTED)
+    // if (WiFi.status() != WL_CONNECTED)
+    if (true)
     {
         Serial.println("WiFi not connected");
+        // USE SIM HERE
+        sim_init();
+        response = sim_sendHttpsGet(url);
+        printf("response");
         return response;
     }
 
+    
     WiFiClientSecure client;
     client.setCACert(root_ca);
     HTTPClient https;
@@ -85,6 +93,8 @@ void sendHttpsPost(const String &contact, const String &message, const String &a
 {
     if (WiFi.status() != WL_CONNECTED)
     {
+        // USE SIM HERE
+        
         Serial.println("WiFi lost");
         return;
     }
@@ -93,7 +103,9 @@ void sendHttpsPost(const String &contact, const String &message, const String &a
     client.setCACert(root_ca);
     HTTPClient https;
 
-    const char *serverUrl = "https://154.16.36.201:40837/api/send_message_to_contact";
+    
+    String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/send_message_to_contact/";
+    const char *serverUrl = url.c_str();
     if (!https.begin(client, serverUrl))
     {
         Serial.println("HTTPS begin failed");

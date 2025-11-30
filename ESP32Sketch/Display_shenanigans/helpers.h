@@ -6,6 +6,8 @@
 #include <vector>  
 #include <chrono>
 #include <thread>
+
+#include "variables.h"
 using namespace std;  // <-- So we can use vector<String>
 
 // Returns vector<String> — always safe (empty on error)

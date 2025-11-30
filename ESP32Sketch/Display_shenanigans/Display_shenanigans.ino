@@ -1,6 +1,7 @@
 #include <TFT_eSPI.h> // Hardware-specific library
 #include <SPI.h>
 #include "whatsapp_contacts.h"
+#include "variables.h"
 
 TFT_eSPI tft = TFT_eSPI();       // Invoke custom library
 
@@ -17,7 +18,8 @@ int my_apps_length = sizeof(my_apps)/sizeof(my_apps[0]);
 
 
 void setup(void) {
-  Serial.begin(9600);
+  
+  Serial.begin(115200);
 
   const char* ssid     = "Wi-Find You Cute 2.4 GHz";
   const char* password = "Minecraft123!";

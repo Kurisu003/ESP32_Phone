@@ -4,6 +4,8 @@
 #include <SPI.h>
 #include <ArduinoJson.h>
 #include <vector>
+
+#include "variables.h"
 using namespace std;
 
 extern TFT_eSPI tft;
@@ -25,7 +27,7 @@ unsigned int refetch_message_counter = 0;
 
 void init_chat(const char* contact) {
 
-    String url = "https://154.16.36.201:40837/api/messages_from_contact/" + String(contact);
+    String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/messages_from_contact/" + String(contact);
     String response = sendHttpsGet(url.c_str(), encrypted_api_key);
 
     tft.fillScreen(TFT_BLACK);

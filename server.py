@@ -101,6 +101,7 @@ def send_message_to_contact():
             return jsonify([{"failed":"failed"}])
 
         data = request.get_json()
+        print(data)
         print(data["content"]["contact"])
         print(data["content"]["message"])
 
@@ -120,7 +121,7 @@ if __name__ == '__main__':
     context = ('cert.pem', 'key.pem')  # (cert, key)
     app.run(
         host='0.0.0.0',
-        port=40837,
+        port=58292,
         debug=False,
         ssl_context=context
     )

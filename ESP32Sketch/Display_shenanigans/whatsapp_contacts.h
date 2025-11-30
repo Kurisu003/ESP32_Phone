@@ -8,6 +8,8 @@
 #include <vector>  
 #include <chrono>
 #include <thread>
+
+#include "variables.h"
 using namespace std;  // <-- So we can use vector<String>
 
 extern TFT_eSPI tft;
@@ -46,7 +48,8 @@ void init_contacts(){
   tft.setTextSize(1);
   tft.setCursor(0, 0);
 
-  String response = sendHttpsGet("https://154.16.36.201:40837/api/get_contacts", encrypted_api_key);
+  String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/get_contacts";
+  String response = sendHttpsGet(url.c_str(), encrypted_api_key);
 
   if (response.length() == 0) {
     tft.fillScreen(TFT_BLACK);
@@ -64,8 +67,7 @@ void init_contacts(){
 
 
 void draw_contacts(){
-
-  String url = "https://154.16.36.201:40837/api/get_unreads";
+  String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/get_unreads/";
   String response = sendHttpsGet(url.c_str(), encrypted_api_key);
   vector<String> unread_contacts = parseJsonArray(response);
 
@@ -94,13 +96,16 @@ void draw_contacts(){
 }
 
 void init_disp_contacts(){
+
   keypadInit();
+  printf("Keypad init\n");
   init_contacts();
+  printf("Contacts init\n");
   draw_contacts();
 }
 
 void whatsapp_main() {
- 
+  printf("Whatsapp Main\n");
   init_disp_contacts();
 
   int last_contact = 0;
