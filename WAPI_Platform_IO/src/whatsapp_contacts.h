@@ -5,83 +5,93 @@
 #include <TFT_eSPI.h>
 #include <SPI.h>
 #include <ArduinoJson.h>
-#include <vector>  
+#include <vector>
 #include <chrono>
 #include <thread>
 
 #include "variables.h"
-using namespace std;  // <-- So we can use vector<String>
+using namespace std; // <-- So we can use vector<String>
 
 extern TFT_eSPI tft;
-
-
 
 // char* encrypted_api_key = "6Y/2RcOyPX3cgpPY3BFvfXs/amLBS9Mgue/9Os8=";
 int selected_contact = 0;
 vector<String> contacts;
 
-void display_contact(int x, int index, const char* contact, int selected_contact, int page, bool is_unread){
+void display_contact(int x, int index, const char *contact, int selected_contact, int page, bool is_unread)
+{
   // index used so the display draws correctly
-  int index_for_draw = index-page*8;
-  int y = (index_for_draw*20);
-  if (index == selected_contact){
+  int index_for_draw = index - page * 8;
+  int y = (index_for_draw * 20);
+  if (index == selected_contact)
+  {
     tft.drawRect(x, y, 70, 18, TFT_BLUE);
   }
-  else{
+  else
+  {
     tft.drawRect(x, y, 70, 18, TFT_WHITE);
   }
-  if (is_unread){
-    tft.fillCircle(x+70, y, 3, TFT_BLUE);
+  if (is_unread)
+  {
+    tft.fillCircle(x + 70, y, 3, TFT_BLUE);
   }
 
-  char buffer[11];  // 10 chars + null terminator
+  char buffer[11]; // 10 chars + null terminator
   strncpy(buffer, contact, 10);
-  buffer[10] = '\0';  // Force null-terminate
+  buffer[10] = '\0'; // Force null-terminate
 
-  tft.setCursor(x+5,y+5);
+  tft.setCursor(x + 5, y + 5);
   tft.print(buffer);
 }
 
-void init_contacts(){
+void fill_screen_black()
+{
   tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_WHITE);
   tft.setTextSize(1);
   tft.setCursor(0, 0);
+}
 
-  String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/get_contacts";
-  String response = sendHttpsGet(url.c_str(), encrypted_api_key);
+void init_contacts()
+{
+  fill_screen_black();
 
-  if (response.length() == 0) {
-    tft.fillScreen(TFT_BLACK);
+  String response = get_contacts();
 
-    tft.setCursor(0, 0);
+  if (response.length() == 0)
+  {
     tft.print("No response");
-    while(1){}
+    while (1)
+    {
+    }
   }
 
   // vector<String> contacts = parseJsonArray(response);
   contacts = parseJsonArray(response);
-
-  tft.fillScreen(TFT_BLACK);
 }
 
+void draw_contacts()
+{
+  String unreads = get_unreads();
+  while (1)
+  {
+    Serial.println(unreads);
+  }
+  vector<String> unread_contacts = parseJsonArray(unreads);
 
-void draw_contacts(){
-  String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/get_unreads/";
-  String response = sendHttpsGet(url.c_str(), encrypted_api_key);
-  vector<String> unread_contacts = parseJsonArray(response);
+  Serial.println("Color changed");
+  fill_screen_black();
 
-  tft.fillScreen(TFT_BLACK);
-  tft.setCursor(0, 0);
-
-  if (contacts.empty()) {
+  if (contacts.empty())
+  {
     tft.print("No contacts found");
     return;
   }
 
   // Displays 8 contacts per page
-  int page = selected_contact/8;
-  for (size_t i = page * 8; i < min(contacts.size(), (size_t)8 + page * 8) ; i++) {
+  int page = selected_contact / 8;
+  for (size_t i = page * 8; i < min(contacts.size(), (size_t)8 + page * 8); i++)
+  {
     bool is_unread = std::find(unread_contacts.begin(), unread_contacts.end(), contacts[i]) != unread_contacts.end();
     display_contact(5, i, contacts[i].c_str(), selected_contact, page, is_unread);
     // display_contact(5, i, contacts[i].c_str(), selected_contact, page);
@@ -91,13 +101,10 @@ void draw_contacts(){
   tft.print(page + 1);
   tft.print("/");
   tft.print(int(ceil(contacts.size() / 8.0)));
-  
-
 }
 
-void init_disp_contacts(){
-
-
+void init_disp_contacts()
+{
   keypadInit();
   printf("Keypad init\n");
   init_contacts();
@@ -105,24 +112,27 @@ void init_disp_contacts(){
   draw_contacts();
 }
 
-void whatsapp_main() {
+void whatsapp_main()
+{
   printf("Whatsapp Main\n");
   init_disp_contacts();
 
   int last_contact = 0;
 
-  while(1) {
+  while (1)
+  {
     char key = keypadGetKey();
 
-    if(key == '2')
-      selected_contact --;
-    else if(key == 56)
-      selected_contact ++;
-    else if(key == '6')
+    if (key == '2')
+      selected_contact--;
+    else if (key == 56)
+      selected_contact++;
+    else if (key == '6')
       selected_contact += 8;
-    else if(key == '4')
+    else if (key == '4')
       selected_contact -= 8;
-    else if(key == '5'){
+    else if (key == '5')
+    {
       whatsapp_chat(contacts[selected_contact].c_str());
       init_disp_contacts();
     }
@@ -130,7 +140,8 @@ void whatsapp_main() {
     selected_contact %= contacts.size();
 
     // only redraw if something happened
-    if (last_contact != selected_contact) {
+    if (last_contact != selected_contact)
+    {
       draw_contacts();
     }
 
