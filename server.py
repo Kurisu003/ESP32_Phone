@@ -48,17 +48,17 @@ def api_key_is_correct(client_key):
 @app.route('/api/get_contacts', methods=['GET'])
 def get_contacts():
     # client_key = request.headers.get('X-API-Key')
-    # try:
-    #     if not api_key_is_correct(client_key):
-    #         return jsonify([{"failed":"failed"}])
+    try:
+        # if not api_key_is_correct(client_key):
+            # return jsonify([{"failed":"failed"}])
 
-    #     contacts = whatsapp.list_contacts()
-    #     return jsonify(clean_list(contacts))
+        contacts = whatsapp.list_contacts()
+        return jsonify(clean_list(contacts))
 
 
-    # except:
-    #     return jsonify([{"failed":"failed"}])
-    return "Success"
+    except:
+        return jsonify([{"failed":"failed"}])
+    # return "Success"
 
 @app.route('/api/messages_from_contact/<contact_id>', methods=['GET'])
 def messages_from_contact(contact_id):
@@ -118,11 +118,11 @@ def start_thread():
 
 if __name__ == '__main__':
     print(encrypt_data(api_key,api_encryption_key))
-    # start_thread()
+    start_thread()
     context = ('cert.pem', 'key.pem')  # (cert, key)
     app.run(
         host='0.0.0.0',
-        port=28411,
+        port=49245,
         debug=False,
         ssl_context=context
     )

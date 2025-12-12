@@ -57,11 +57,7 @@ void setup(void)
   // tft.fillTriangle(0, 0, 100, 0, 50, 50, TFT_BLUE);
 
   // tft.drawRoundRect(x, y, w, h, 5, color);
-  // whatsapp_main();
-
-  sim_init();
-  wait_for_ip();
-  send_http("https://154.16.36.201:28411/api/get_contacts");
+  whatsapp_main();
 
   tft.fillScreen(TFT_BLUE);
 }

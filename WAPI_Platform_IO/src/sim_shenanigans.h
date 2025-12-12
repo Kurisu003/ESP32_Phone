@@ -2,8 +2,11 @@
 #include "variables.h"
 #define RX_PIN 17
 #define TX_PIN 16
+#define HTTP_DELAY 200
+bool sim_is_initialized = false;
 HardwareSerial modem(2);
 
+//! PRIVATE
 String waitForURC(String token, unsigned long timeoutMs = 10000)
 {
     unsigned long start = millis();
@@ -28,6 +31,7 @@ String waitForURC(String token, unsigned long timeoutMs = 10000)
     return "";
 }
 
+//! PRIVATE
 String read_module()
 {
     String resp = "";
@@ -43,6 +47,7 @@ String read_module()
     return resp;
 }
 
+//! PRIVATE
 void send_command(String command)
 {
     command.trim();
@@ -53,24 +58,42 @@ void send_command(String command)
     }
 }
 
+//! PRIVATE
 String send_and_wait(String command, String token_to_wait_for)
 {
     send_command(command);
     return waitForURC(token_to_wait_for);
 }
 
-void wait_for_ip()
+//! PRIVATE
+bool wait_for_ip()
 {
     String ip = "0.0.0.0";
+    unsigned long start = millis();
+
     while (ip == "0.0.0.0")
     {
         String resp = send_and_wait("AT+CGPADDR=1", "+CGPADDR");
-        ip = resp != "" ? resp : "0.0.0.0";
+
+        if (resp.length() > 0)
+            ip = resp;
+
+        // Timeout after 30 seconds
+        if (millis() - start > 30000)
+        {
+            Serial.println("Timeout waiting for IP address");
+            return false;
+        }
+
+        delay(500); // optional: avoid hammering the modem
     }
+
     Serial.println("IP acquired: " + ip);
+    return true;
 }
 
-void sim_init()
+//! PRIVATE
+bool sim_init()
 {
     Serial.begin(115200);
 
@@ -80,8 +103,12 @@ void sim_init()
     modem.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
     send_and_wait("AT", "OK");
     send_and_wait("ATE0", "OK");
+    bool has_ip = wait_for_ip();
+    sim_is_initialized = has_ip;
+    return has_ip;
 }
 
+//! PRIVATE
 String http_read_content()
 {
     // Request the full payload
@@ -91,7 +118,7 @@ String http_read_content()
     bool inPayload = false;
     unsigned long start = millis();
 
-    while (millis() - start < 5000) // 5 s timeout
+    while (millis() - start < 200) // 5 s timeout
     {
         if (!modem.available())
             continue;
@@ -127,25 +154,101 @@ String http_read_content()
     return content;
 }
 
-String send_http(String address)
+//! PUBLIC
+String send_http_sim(String address)
 {
+    if (!sim_is_initialized)
+    {
+        bool could_init_sim = sim_init();
+        if (!could_init_sim)
+            return "FAILED";
+    }
     // flush output
     read_module();
-    delay(5000);
+    delay(HTTP_DELAY);
 
-    send_and_wait("AT+HTTPTERM", "OK"); // Might return error, but just to make sure, waits becaus if it does return ok, it will overwrite other command
-    delay(5000);
+    send_command("AT+HTTPTERM"); // Might return error, but just to make sure, waits becaus if it does return ok, it will overwrite other command
+    read_module();
+    delay(HTTP_DELAY);
 
     send_and_wait("AT+HTTPINIT", "OK");
-    delay(5000);
+    delay(HTTP_DELAY);
 
     String command = "AT+HTTPPARA=\"URL\",\"" + address + "\"";
     send_and_wait(command, "OK");
-    delay(5000);
-    send_and_wait("AT+HTTPACTION=0", "+HTTPACTION");
-    delay(5000);
+    delay(HTTP_DELAY);
 
-    Serial.println(http_read_content());
+    String header =
+        String("AT+HTTPPARA=\"USERDATA\",\"X-API-Key: ") +
+        String(encrypted_api_key) +
+        "\\r\\n\"";
+    send_and_wait(header, "OK");
+    delay(HTTP_DELAY);
+
+    send_and_wait("AT+HTTPACTION=0", "+HTTPACTION");
+    delay(HTTP_DELAY);
+
+    String response = http_read_content();
+    Serial.println(response);
+
+    send_and_wait("AT+HTTPTERM", "OK");
+    delay(HTTP_DELAY);
     // read_module();
-    return "";
+    return response;
+}
+
+//! PUBLIC
+String send_http_post_sim(String address, String post_data)
+{
+    if (!sim_is_initialized)
+    {
+        bool could_init_sim = sim_init();
+        if (!could_init_sim)
+            return "FAILED";
+    }
+
+    // flush output
+    read_module();
+    delay(HTTP_DELAY);
+
+    // Make sure HTTP session is terminated
+    send_command("AT+HTTPTERM"); // Might return error, but just to make sure, waits becaus if it does return ok, it will overwrite other command
+    read_module();
+
+    // Initialize HTTP session
+    send_and_wait("AT+HTTPINIT", "OK");
+    delay(HTTP_DELAY);
+
+    // Set URL
+    String command = "AT+HTTPPARA=\"URL\",\"" + address + "\"";
+    send_and_wait(command, "OK");
+    delay(HTTP_DELAY);
+
+    // Set headers
+    String header = String("AT+HTTPPARA=\"USERDATA\",\"X-API-Key: ") +
+                    String(encrypted_api_key) +
+                    "\\r\\n\"";
+    send_and_wait(header, "OK");
+    delay(HTTP_DELAY);
+
+    // Prepare POST data
+    command = "AT+HTTPDATA=" + String(post_data.length()) + ",10000"; // 10000 = timeout in ms
+    if (send_and_wait(command, "DOWNLOAD"))
+    {
+        // Send actual POST data
+        send_and_wait(post_data, "OK");
+    }
+    delay(HTTP_DELAY);
+
+    // Send POST request
+    send_and_wait("AT+HTTPACTION=1", "+HTTPACTION");
+    delay(HTTP_DELAY);
+
+    // Read response
+    String response = http_read_content();
+    Serial.println(response);
+
+    send_and_wait("AT+HTTPTERM", "OK");
+    delay(HTTP_DELAY);
+    return response;
 }

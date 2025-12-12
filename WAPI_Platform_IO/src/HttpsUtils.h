@@ -75,40 +75,22 @@ String sendHttpsGet_wifi(const char *url, const char *api_key)
     return response;
 }
 
-String sendHttpsGet_sim(String url, const char *api_key)
-{
-    String response = "";
-    sim_init();
-    // Serial.println(get_sim_info_and_wait_for_ip());
-    // response = sim_sendHttpsGet(url);
-    // response = sim_sendHttpsGet("https://154.16.36.201:25431/api/get_contacts");
-    // sim_sendHttpsGet("https://154.16.36.201:25431/api/get_contacts");
-    Serial.println(response);
-    return response;
-}
-
+//! Public
 String sendHttpsGet(String url, const char *api_key)
 {
+    //! Hardcoded sim for now
     // if (WiFi.status() != WL_CONNECTED)
     if (true)
     {
-        return (sendHttpsGet_sim(url, api_key));
+        return (send_http_sim(url));
     }
 
     return (sendHttpsGet_wifi(url.c_str(), api_key));
 }
 
-String get_unreads()
+String get_whatsapp_info(String option)
 {
-    String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/get_unreads";
-    String response = sendHttpsGet(url, encrypted_api_key);
-    Serial.println(response);
-    return response;
-}
-
-String get_contacts()
-{
-    String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/get_contacts";
+    String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/" + option;
     String response = sendHttpsGet(url, encrypted_api_key);
     Serial.println(response);
     return response;
@@ -126,7 +108,6 @@ void sendHttpsPost(const String &contact, const String &message, const String &a
         Serial.println("WiFi lost");
         return;
     }
-
     WiFiClientSecure client;
     client.setInsecure();
     // client.setCACert(root_ca);

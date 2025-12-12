@@ -17,6 +17,7 @@ extern TFT_eSPI tft;
 // char* encrypted_api_key = "6Y/2RcOyPX3cgpPY3BFvfXs/amLBS9Mgue/9Os8=";
 int selected_contact = 0;
 vector<String> contacts;
+vector<String> unread_contacts;
 
 void display_contact(int x, int index, const char *contact, int selected_contact, int page, bool is_unread)
 {
@@ -55,30 +56,19 @@ void fill_screen_black()
 void init_contacts()
 {
   fill_screen_black();
-
-  String response = get_contacts();
-
-  if (response.length() == 0)
-  {
-    tft.print("No response");
-    while (1)
-    {
-    }
-  }
-
-  // vector<String> contacts = parseJsonArray(response);
+  String response = get_whatsapp_info("get_contacts");
   contacts = parseJsonArray(response);
+
+  response = "";
+  response = get_whatsapp_info("get_unreads");
+  unread_contacts = parseJsonArray(response);
+
+  printf("Contacts jsoned\n");
+  tft.fillScreen(TFT_RED);
 }
 
 void draw_contacts()
 {
-  String unreads = get_unreads();
-  while (1)
-  {
-    Serial.println(unreads);
-  }
-  vector<String> unread_contacts = parseJsonArray(unreads);
-
   Serial.println("Color changed");
   fill_screen_black();
 
@@ -105,8 +95,6 @@ void draw_contacts()
 
 void init_disp_contacts()
 {
-  keypadInit();
-  printf("Keypad init\n");
   init_contacts();
   printf("Contacts init\n");
   draw_contacts();
@@ -115,6 +103,9 @@ void init_disp_contacts()
 void whatsapp_main()
 {
   printf("Whatsapp Main\n");
+
+  keypadInit();
+  printf("Keypad init\n");
   init_disp_contacts();
 
   int last_contact = 0;
