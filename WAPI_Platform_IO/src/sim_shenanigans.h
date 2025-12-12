@@ -112,13 +112,13 @@ bool sim_init()
 String http_read_content()
 {
     // Request the full payload
-    modem.print("AT+HTTPREAD=0,9999\r");
+    modem.print("AT+HTTPREAD=0,99999\r");
 
     String content = "";
     bool inPayload = false;
     unsigned long start = millis();
 
-    while (millis() - start < 200) // 5 s timeout
+    while (millis() - start < 2000) // 5 s timeout
     {
         if (!modem.available())
             continue;
@@ -189,11 +189,12 @@ String send_http_sim(String address)
     delay(HTTP_DELAY);
 
     String response = http_read_content();
-    Serial.println(response);
+    // Serial.println(response);
 
     send_and_wait("AT+HTTPTERM", "OK");
     delay(HTTP_DELAY);
     // read_module();
+
     return response;
 }
 
@@ -242,6 +243,8 @@ String send_http_post_sim(String address, String post_data)
 
     // Send POST request
     send_and_wait("AT+HTTPACTION=1", "+HTTPACTION");
+    delay(HTTP_DELAY);
+    delay(HTTP_DELAY);
     delay(HTTP_DELAY);
 
     // Read response

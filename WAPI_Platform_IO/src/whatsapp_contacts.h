@@ -93,7 +93,7 @@ void draw_contacts()
   tft.print(int(ceil(contacts.size() / 8.0)));
 }
 
-void init_disp_contacts()
+void init_and_disp_contacts()
 {
   init_contacts();
   printf("Contacts init\n");
@@ -106,7 +106,8 @@ void whatsapp_main()
 
   keypadInit();
   printf("Keypad init\n");
-  init_disp_contacts();
+
+  init_and_disp_contacts();
 
   int last_contact = 0;
 
@@ -124,8 +125,9 @@ void whatsapp_main()
       selected_contact -= 8;
     else if (key == '5')
     {
-      whatsapp_chat(contacts[selected_contact].c_str());
-      init_disp_contacts();
+      whatsapp_chat_main(contacts[selected_contact].c_str());
+      // after exiting from chat with person, it should be reinitialized
+      init_and_disp_contacts();
     }
 
     selected_contact %= contacts.size();

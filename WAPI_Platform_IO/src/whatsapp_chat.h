@@ -29,8 +29,10 @@ unsigned int refetch_message_counter = 0;
 void init_chat(const char *contact)
 {
 
-    String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/messages_from_contact/" + String(contact);
-    String response = sendHttpsGet(url.c_str(), encrypted_api_key);
+    // String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/messages_from_contact/" + String(contact);
+
+    // String response = sendHttpsGet(url.c_str(), encrypted_api_key);
+    String response = get_whatsapp_info("messages_from_contact/" + String(contact));
 
     tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_WHITE);
@@ -108,9 +110,8 @@ void fresh_chat_init(const char *contact)
     render_screen();
 }
 
-void whatsapp_chat(const char *contact)
+void whatsapp_chat_main(const char *contact)
 {
-
     bool type_mode = false;
 
     static char lastKey = 0;
@@ -231,7 +232,7 @@ void whatsapp_chat(const char *contact)
             // Send message
             if (key == '1')
             {
-                sendHttpsPost(contact, currentText, encrypted_api_key);
+                sendHttpsPost(contact, currentText);
                 fresh_chat_init(contact);
                 currentText = "";
             }

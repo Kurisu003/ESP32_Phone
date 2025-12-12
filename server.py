@@ -98,8 +98,8 @@ def send_message_to_contact():
     client_key = request.headers.get('X-API-Key')
 
     try:
-        if not api_key_is_correct(client_key):
-            return jsonify([{"failed":"failed"}])
+        # if not api_key_is_correct(client_key):
+        #     return jsonify([{"failed":"failed"}])
 
         data = request.get_json()
         print(data)

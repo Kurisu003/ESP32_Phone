@@ -88,6 +88,7 @@ String sendHttpsGet(String url, const char *api_key)
     return (sendHttpsGet_wifi(url.c_str(), api_key));
 }
 
+//! Public
 String get_whatsapp_info(String option)
 {
     String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/" + option;
@@ -99,52 +100,50 @@ String get_whatsapp_info(String option)
 // ---------------------------------------------------------------------------
 // POST JSON payload with contact/message and X-API-Key
 // ---------------------------------------------------------------------------
-void sendHttpsPost(const String &contact, const String &message, const String &apiKey)
-{
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        // USE SIM HERE
 
-        Serial.println("WiFi lost");
-        return;
-    }
+String send_http_post_wifi(String url, String payload)
+{
     WiFiClientSecure client;
     client.setInsecure();
     // client.setCACert(root_ca);
     HTTPClient https;
 
-    String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/send_message_to_contact/";
     const char *serverUrl = url.c_str();
+
     if (!https.begin(client, serverUrl))
     {
-        Serial.println("HTTPS begin failed");
-        return;
+        return "HTTPS begin failed";
     }
 
-    https.addHeader("Content-Type", "application/json");
-    https.addHeader("X-API-Key", apiKey);
-
-    // Example static timestamp – replace with real time if you have RTC/TimeLib
-    char timestamp[25];
-    snprintf(timestamp, sizeof(timestamp), "%04d-%02d-%02dT%02d:00:00Z",
-             2025, 11, 4, 12);
-
-    String payload = "{\"role\":\"user\",\"content\":{\"contact\":\"" + contact +
-                     "\",\"message\":\"" + message +
-                     "\"},\"metadata\":{\"source\":\"arduino\",\"timestamp\":\"" +
-                     String(timestamp) + "\"}}";
+    // https.addHeader("Content-Type", "application/json");
+    // https.addHeader("X-API-Key", apiKey);
 
     int code = https.POST(payload);
     if (code > 0)
     {
         Serial.printf("HTTPS POST success, code: %d\n", code);
-        Serial.println("Response: " + https.getString());
+        return https.getString();
     }
-    else
-    {
-        Serial.printf("HTTPS POST failed: %s\n", https.errorToString(code).c_str());
-    }
-    https.end();
+
+    return ("HTTPS POST failed: %s\n", https.errorToString(code).c_str());
+    // https.end();
+    // how to end before returning?
+}
+
+String sendHttpsPost(const String &contact, const String &message)
+{
+    Serial.println(contact);
+    Serial.println(message);
+    String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/send_message_to_contact";
+
+    String payload = "{\"content\":{\"contact\":\"" + contact + "\",\"message\":\"" + message + "\"}}";
+
+    // if (WiFi.status() != WL_CONNECTED)
+    //! Hardcoded to always use sim for now
+    if (true)
+        return send_http_post_sim(url, payload);
+
+    return send_http_post_wifi(url, payload);
 }
 
 #endif // HTTPS_UTILS_H
