@@ -39,7 +39,7 @@ atLBEGBzCzfY/A==
 // ---------------------------------------------------------------------------
 // GET request with custom X-API-Key header
 // ---------------------------------------------------------------------------
-String sendHttpsGet_wifi(const char *url, const char *api_key)
+String sendHttpsGet_wifi(const char *url)
 {
 
     String response = "";
@@ -51,7 +51,6 @@ String sendHttpsGet_wifi(const char *url, const char *api_key)
     Serial.printf("GET %s ... ", url);
     if (https.begin(client, url))
     {
-        https.addHeader("X-API-Key", api_key);
         int httpCode = https.GET();
 
         if (httpCode > 0)
@@ -76,7 +75,7 @@ String sendHttpsGet_wifi(const char *url, const char *api_key)
 }
 
 //! Public
-String sendHttpsGet(String url, const char *api_key)
+String sendHttpsGet(String url)
 {
     //! Hardcoded sim for now
     // if (WiFi.status() != WL_CONNECTED)
@@ -85,14 +84,14 @@ String sendHttpsGet(String url, const char *api_key)
         return (send_http_sim(url));
     }
 
-    return (sendHttpsGet_wifi(url.c_str(), api_key));
+    return (sendHttpsGet_wifi(url.c_str()));
 }
 
 //! Public
 String get_whatsapp_info(String option)
 {
     String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/" + option;
-    String response = sendHttpsGet(url, encrypted_api_key);
+    String response = sendHttpsGet(url);
     Serial.println(response);
     return response;
 }
@@ -130,7 +129,7 @@ String send_http_post_wifi(String url, String payload)
     // how to end before returning?
 }
 
-String sendHttpsPost(const String &contact, const String &message)
+String send_message_to_contact(const String &contact, const String &message)
 {
     Serial.println(contact);
     Serial.println(message);

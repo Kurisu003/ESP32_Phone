@@ -1,10 +1,10 @@
 #include "User_Setup.h"
-#include <TFT_eSPI.h> // Hardware-specific library
-#include <SPI.h>
+
+#include "display.h"
 #include "whatsapp_contacts.h"
 #include "variables.h"
-
-TFT_eSPI tft = TFT_eSPI(); // Invoke custom library
+#include "wifi_self.h"
+#include <SPI.h>
 
 int selected_app = 0;
 
@@ -19,63 +19,15 @@ int my_apps_length = sizeof(my_apps) / sizeof(my_apps[0]);
 
 void setup(void)
 {
-
   Serial.begin(115200);
+  screen_init();
 
-  const char *ssid = "Wi-Find You Cute 2.4 GHz";
-  const char *password = "Minecraft123!";
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    tft.setCursor(0, 0);
-    tft.print("Connecting to WiFi...");
-  }
+  char *ssid = "Wi-Find You Cute 2.4 GHz";
+  char *password = "Minecraft123!";
+  conenct_to_wifi(ssid, password);
 
-  // Use this initializer if you're using a 1.8" TFT
-  tft.init(); // initialize a ST7735S chip
-  tft.invertDisplay(0);
-
-  tft.fillScreen(TFT_BLACK);
-  // tft.height(), etc, wroks
-  // fill versions also availible
-  // x, y, w, h
-  // tft.drawRect(0, 0, 10, 10, TFT_WHITE);
-  // tft.drawLine(10, 10, 20, 20, TFT_WHITE);
-
-  // tft.setCursor(40, 40);
-  // tft.setTextColor(TFT_WHITE);
-  // tft.setTextWrap(true);
-
-  // x, y
-  // tft.setCursor(0, 30);
-  // tft.print("Penis");
-
-  // tft.drawCircle(60, 60, 10, TFT_WHITE);
-
-  // tft.drawTriangle(x_1, y_1, x_2, y_2, x_3, y_3, color);
-  // tft.fillTriangle(0, 0, 100, 0, 50, 50, TFT_BLUE);
-
-  // tft.drawRoundRect(x, y, w, h, 5, color);
-  whatsapp_main();
-
-  tft.fillScreen(TFT_BLUE);
-}
-
-void drawApp(String name, int x, int index, bool is_selected)
-{
-  int y = (index * 20) + 5;
-  if (is_selected)
-  {
-    tft.drawRect(x, y, 70, 18, TFT_BLUE);
-  }
-  else
-  {
-    tft.drawRect(x, y, 70, 18, TFT_WHITE);
-  }
-
-  tft.setCursor(x + 5, y + 5);
-  tft.print(name);
+  // whatsapp_main();
+  whatsapp_chat_main("Elmar");
 }
 
 void draw_apps_loop()

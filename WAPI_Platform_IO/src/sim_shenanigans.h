@@ -178,13 +178,6 @@ String send_http_sim(String address)
     send_and_wait(command, "OK");
     delay(HTTP_DELAY);
 
-    String header =
-        String("AT+HTTPPARA=\"USERDATA\",\"X-API-Key: ") +
-        String(encrypted_api_key) +
-        "\\r\\n\"";
-    send_and_wait(header, "OK");
-    delay(HTTP_DELAY);
-
     send_and_wait("AT+HTTPACTION=0", "+HTTPACTION");
     delay(HTTP_DELAY);
 
@@ -223,13 +216,6 @@ String send_http_post_sim(String address, String post_data)
     // Set URL
     String command = "AT+HTTPPARA=\"URL\",\"" + address + "\"";
     send_and_wait(command, "OK");
-    delay(HTTP_DELAY);
-
-    // Set headers
-    String header = String("AT+HTTPPARA=\"USERDATA\",\"X-API-Key: ") +
-                    String(encrypted_api_key) +
-                    "\\r\\n\"";
-    send_and_wait(header, "OK");
     delay(HTTP_DELAY);
 
     // Prepare POST data

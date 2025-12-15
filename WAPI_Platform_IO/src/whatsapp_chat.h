@@ -1,57 +1,95 @@
 #include "HttpsUtils.h"
 #include "helpers.h"
+#include "variables.h"
+
 #include <TFT_eSPI.h>
 #include <SPI.h>
 #include <ArduinoJson.h>
+
 #include <vector>
 
 #include "variables.h"
-using namespace std;
-
-extern TFT_eSPI tft;
-// char* encrypted_api_key = "6Y/2RcOyPX3cgpPY3BFvfXs/amLBS9Mgue/9Os8=";
 
 #define PIN_UP 25
 #define PIN_DOWN 33
 #define DEBOUNCE 50 // ms
-
-struct ChatLine
-{
-    String text;
-    uint16_t color;
-};
+#define MESSAGE_CUTOFF 20
 
 std::vector<ChatLine> all_lines;
 int scroll_pos = 0;
 unsigned long last_up = 0, last_down = 0;
 unsigned int refetch_message_counter = 0;
 
-void init_chat(const char *contact)
+#include <vector>
+#include <Arduino.h>
+
+std::vector<String> get_line_segmented_by_amount(const String &text, int amount)
 {
+    std::vector<String> segments;
+    if (amount <= 0)
+        return segments; // invalid amount
 
-    // String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/messages_from_contact/" + String(contact);
+    int pos = 0;
+    int text_len = text.length();
 
-    // String response = sendHttpsGet(url.c_str(), encrypted_api_key);
+    while (pos < text_len)
+    {
+        // Determine the maximum end position for this segment
+        int end = pos + amount;
+        if (end >= text_len)
+        {
+            // Last segment, take remaining text
+            segments.push_back(text.substring(pos));
+            break;
+        }
+
+        // Look for the last space within this segment to keep whole words
+        int last_space = -1;
+        for (int i = pos; i < end; i++)
+        {
+            if (text[i] == ' ')
+                last_space = i;
+        }
+
+        if (last_space != -1 && last_space > pos)
+        {
+            // Break at the last space
+            segments.push_back(text.substring(pos, last_space));
+            pos = last_space + 1; // skip the space
+        }
+        else
+        {
+            // No space found, force split
+            segments.push_back(text.substring(pos, end));
+            pos = end;
+        }
+    }
+
+    return segments;
+}
+
+void init_chat_and_calc_scroll_pos(const char *contact)
+{
     String response = get_whatsapp_info("messages_from_contact/" + String(contact));
-
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_WHITE);
-    tft.setTextSize(1);
 
     if (response.length() == 0)
     {
-        tft.setCursor(0, 0);
-        tft.print("No response");
-        return;
+        display_simple_text("no response");
+        while (1)
+        {
+        }
     }
 
-    StaticJsonDocument<6144> doc;
-    DeserializationError error = deserializeJson(doc, response, DeserializationOption::NestingLimit(6));
+    // StaticJsonDocument<6144> doc;
+    JsonDocument doc;
+
+    DeserializationError error = deserializeJson(doc, response);
     if (error)
     {
-        tft.setCursor(0, 0);
-        tft.print("JSON fail");
-        return;
+        display_simple_text(error.f_str());
+        while (1)
+        {
+        }
     }
 
     all_lines.clear();
@@ -65,49 +103,34 @@ void init_chat(const char *contact)
             continue;
 
         uint16_t color = (String(sender) == "You") ? TFT_GREEN : TFT_CYAN;
-        String full = String(message);
-        int pos = 0;
+
+        // Prepend sender name
+        String full_message = String(sender) + ": " + String(message);
+
+        // Add to the all_lines vector
+        std::vector<String> segments = get_line_segmented_by_amount(full_message, MESSAGE_CUTOFF);
+
         bool first = true;
-
-        while (pos < full.length())
+        for (const String &seg : segments)
         {
-            int next = full.indexOf('\n', pos);
-            if (next == -1)
-                next = full.length();
-            String line = full.substring(pos, next);
-            String out = first ? String(sender) + ": " + line : "    " + line;
-            all_lines.push_back({out, color});
+            String line = first ? seg : " " + seg;
+            all_lines.push_back({line, color});
             first = false;
-            pos = next + 1;
         }
+
+        // Add an additional empty line after each message for spacing
+        all_lines.push_back({"", color});
     }
 
-    // scroll_pos = max(0, (int)all_lines.size() - 20);  // Start at bottom
-    int visible_lines = (tft.height() - 30) / 10;
+    // Adjust scroll position to show the last messages
+    int visible_lines = (get_tft_height() - 30) / 10; // adjust line height as needed
     scroll_pos = max(0, (int)all_lines.size() - visible_lines);
-}
-
-void render_screen()
-{
-    tft.fillScreen(TFT_BLACK);
-    int y = 0;
-    const int line_h = 10;
-    int max_lines = (tft.height() - 30) / line_h;
-
-    for (int i = 0; i < max_lines && scroll_pos + i < all_lines.size(); i++)
-    {
-        const auto &line = all_lines[scroll_pos + i];
-        tft.setTextColor(line.color);
-        tft.setCursor(0, y);
-        tft.print(line.text);
-        y += line_h;
-    }
 }
 
 void fresh_chat_init(const char *contact)
 {
-    init_chat(contact);
-    render_screen();
+    init_chat_and_calc_scroll_pos(contact);
+    render_whatsapp_chat_screen(scroll_pos, all_lines);
 }
 
 void whatsapp_chat_main(const char *contact)
@@ -117,7 +140,7 @@ void whatsapp_chat_main(const char *contact)
     static char lastKey = 0;
     static unsigned long lastPressTime = 0;
     static int pressCount = 0;
-    static String currentText = "";
+    static String current_text = "";
     const unsigned long multiTapTimeout = 800; // ms before committing a letter
 
     // Mapping for T9 keys
@@ -134,18 +157,17 @@ void whatsapp_chat_main(const char *contact)
         "wxyz9"  // 9
     };
 
-    init_chat(contact);
+    init_chat_and_calc_scroll_pos(contact);
     String current_user_message;
 
     if (all_lines.empty())
     {
-        tft.setCursor(0, 0);
-        tft.print("Empty chat");
+        display_simple_text("Empty");
         while (1)
             delay(100);
     }
 
-    render_screen();
+    render_whatsapp_chat_screen(scroll_pos, all_lines);
 
     while (1)
     {
@@ -164,7 +186,7 @@ void whatsapp_chat_main(const char *contact)
                 if (scroll_pos > 0)
                 {
                     scroll_pos--;
-                    render_screen();
+                    render_whatsapp_chat_screen(scroll_pos, all_lines);
                 }
             }
 
@@ -176,7 +198,7 @@ void whatsapp_chat_main(const char *contact)
                 if (scroll_pos < max_scroll)
                 {
                     scroll_pos++;
-                    render_screen();
+                    render_whatsapp_chat_screen(scroll_pos, all_lines);
                 }
             }
         }
@@ -194,7 +216,7 @@ void whatsapp_chat_main(const char *contact)
                     int numLetters = strlen(letters);
                     if (numLetters > 0)
                     {
-                        currentText[currentText.length() - 1] = letters[pressCount % numLetters];
+                        current_text[current_text.length() - 1] = letters[pressCount % numLetters];
                     }
                 }
                 else
@@ -203,7 +225,7 @@ void whatsapp_chat_main(const char *contact)
                     pressCount = 0;
                     const char *letters = t9map[key - '0'];
                     if (strlen(letters) > 0)
-                        currentText += letters[0];
+                        current_text += letters[0];
                 }
 
                 lastPressTime = now;
@@ -213,9 +235,9 @@ void whatsapp_chat_main(const char *contact)
             }
             if (key == '*')
             {
-                if (currentText.length() > 0)
+                if (current_text.length() > 0)
                 {
-                    currentText.remove(currentText.length() - 1);
+                    current_text.remove(current_text.length() - 1);
                     // render_text(currentText);
                 }
                 lastKey = 0; // reset so it doesn't interfere with cycling
@@ -224,7 +246,7 @@ void whatsapp_chat_main(const char *contact)
 
             if (key == '0')
             {
-                currentText += ' ';
+                current_text += ' ';
                 lastKey = 0;
                 pressCount = 0;
             }
@@ -232,9 +254,9 @@ void whatsapp_chat_main(const char *contact)
             // Send message
             if (key == '1')
             {
-                sendHttpsPost(contact, currentText);
+                send_message_to_contact(contact, current_text);
                 fresh_chat_init(contact);
-                currentText = "";
+                current_text = "";
             }
 
             // Commit last character automatically after timeout
@@ -245,14 +267,9 @@ void whatsapp_chat_main(const char *contact)
             }
         }
 
-        tft.fillRect(0, 130, 128, 30, TFT_BLACK);
-        if (type_mode)
-            tft.drawRect(0, 130, 128, 30, TFT_BLUE);
-        else
-            tft.drawRect(0, 130, 128, 30, TFT_WHITE);
+        render_whatsapp_type_mode_rect(type_mode);
 
-        tft.setCursor(2, 132);
-        tft.print(currentText);
+        render_whatsapp_typed_text(current_text);
 
         delay(10);
         refetch_message_counter++;

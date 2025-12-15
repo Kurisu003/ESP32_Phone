@@ -2,7 +2,7 @@
 import threading
 from server_crypto import decrypt_data, encrypt_data
 import whatsapp
-import time
+import json
 from flask import Flask, jsonify, request
 import re
 import unicodedata
@@ -47,10 +47,7 @@ def api_key_is_correct(client_key):
 
 @app.route('/api/get_contacts', methods=['GET'])
 def get_contacts():
-    # client_key = request.headers.get('X-API-Key')
     try:
-        # if not api_key_is_correct(client_key):
-            # return jsonify([{"failed":"failed"}])
 
         contacts = whatsapp.list_contacts()
         return jsonify(clean_list(contacts))
@@ -60,29 +57,45 @@ def get_contacts():
         return jsonify([{"failed":"failed"}])
     # return "Success"
 
+#! Old implementation
+# @app.route('/api/messages_from_contact/<contact_id>', methods=['GET'])
+# def messages_from_contact(contact_id):
+#     try:
+
+#         msgs = whatsapp.get_messages_from_contact(contact_id)
+#         print(f"\nFound {len(msgs)} messages:")
+#         print(msgs)
+#         return jsonify(msgs)
+
+
+#     except:
+#         return jsonify([{"failed":"failed"}])
+
+
 @app.route('/api/messages_from_contact/<contact_id>', methods=['GET'])
 def messages_from_contact(contact_id):
-    client_key = request.headers.get('X-API-Key')
     try:
-        if not api_key_is_correct(client_key):
-            return jsonify([{"failed":"failed"}])
-
         msgs = whatsapp.get_messages_from_contact(contact_id)
-        print(f"\nFound {len(msgs)} messages:")
-        print(msgs)    # show first 10
-        return jsonify(msgs)
 
+        # Remove all newlines from message texts
+        sanitized_msgs = []
+        for msg in msgs:
+            sender, text, flags = msg
+            clean_text = text.replace("\r", " ").replace("\n", " ")
+            sanitized_msgs.append([sender, clean_text, flags])
 
-    except:
-        return jsonify([{"failed":"failed"}])
+        print(f"\nFound {len(sanitized_msgs)} messages:")
+        print(sanitized_msgs)
 
+        return jsonify(sanitized_msgs)
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify([{"failed": "failed"}])
 
 @app.route('/api/get_unreads', methods=['GET'])
 def get_unreads():
-    client_key = request.headers.get('X-API-Key')
     try:
-        if not api_key_is_correct(client_key):
-            return jsonify([{"failed":"failed"}])
 
         has_unread, who = whatsapp.has_unread_notifications()
         # return jsonify([has_unread, who])
@@ -95,18 +108,18 @@ def get_unreads():
 
 @app.route('/api/send_message_to_contact', methods=['POST'])
 def send_message_to_contact():
-    client_key = request.headers.get('X-API-Key')
-
     try:
-        # if not api_key_is_correct(client_key):
-        #     return jsonify([{"failed":"failed"}])
-
-        data = request.get_json()
+        # data = request.get_json()
+        raw = request.data.decode("utf-8")
+        print(raw)
+        data = json.loads(raw)
+        contact = data["content"]["contact"]
+        message = data["content"]["message"]
         print(data)
-        print(data["content"]["contact"])
-        print(data["content"]["message"])
+        print(contact)
+        print(message)
 
-        whatsapp.send_message_to_contact(data["content"]["contact"],data["content"]["message"])
+        whatsapp.send_message_to_contact(contact,message)
         return jsonify({"OK": "OK"}), 201
 
     except:
@@ -122,7 +135,7 @@ if __name__ == '__main__':
     context = ('cert.pem', 'key.pem')  # (cert, key)
     app.run(
         host='0.0.0.0',
-        port=49245,
+        port=34641,
         debug=False,
         ssl_context=context
     )
