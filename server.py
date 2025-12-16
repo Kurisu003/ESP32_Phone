@@ -9,10 +9,6 @@ import unicodedata
 
 app = Flask(__name__)
 
-# api_encryption_key = "3SaZq5I0bhAg9ZEivR4epnFxUOyLOQvzgfafKX9KbmXJ9A43Rd"
-api_encryption_key = "b"
-# api_key = "wQHctnYmzu54VCHv84yeArE3udSdnoa80wPIczWzLfdEsoPhfnUmZo10laDG15H3"
-api_key = "a"
 
 def clean_string(s: str) -> str:
     # Step 1: Replace common umlauts
@@ -38,12 +34,6 @@ def clean_string(s: str) -> str:
 def clean_list(strings: list[str]) -> list[str]:
     return [clean_string(s) for s in strings]
 
-def api_key_is_correct(client_key):
-    decrypted_client_key = str(decrypt_data(client_key, api_encryption_key))
-    if decrypted_client_key != api_key:
-        return False
-    return True
-
 
 @app.route('/api/get_contacts', methods=['GET'])
 def get_contacts():
@@ -55,22 +45,6 @@ def get_contacts():
 
     except:
         return jsonify([{"failed":"failed"}])
-    # return "Success"
-
-#! Old implementation
-# @app.route('/api/messages_from_contact/<contact_id>', methods=['GET'])
-# def messages_from_contact(contact_id):
-#     try:
-
-#         msgs = whatsapp.get_messages_from_contact(contact_id)
-#         print(f"\nFound {len(msgs)} messages:")
-#         print(msgs)
-#         return jsonify(msgs)
-
-
-#     except:
-#         return jsonify([{"failed":"failed"}])
-
 
 @app.route('/api/messages_from_contact/<contact_id>', methods=['GET'])
 def messages_from_contact(contact_id):
@@ -109,7 +83,6 @@ def get_unreads():
 @app.route('/api/send_message_to_contact', methods=['POST'])
 def send_message_to_contact():
     try:
-        # data = request.get_json()
         raw = request.data.decode("utf-8")
         print(raw)
         data = json.loads(raw)
@@ -132,7 +105,9 @@ def start_thread():
 def get_pia_port():
     import subprocess
 
-    piactl_path = r"C:\Program Files\Private Internet Access\piactl.exe"
+    # piactl_path = r"C:\Program Files\Private Internet Access\piactl.exe"
+    piactl_path = "/Applications/Private Internet Access.app/Contents/MacOS/piactl"
+
 
     result = subprocess.run(
         [piactl_path, "get", "portforward"],
@@ -147,7 +122,6 @@ def get_pia_port():
 
 
 if __name__ == '__main__':
-    print(encrypt_data(api_key,api_encryption_key))
     start_thread()
     context = ('cert.pem', 'key.pem')  # (cert, key)
     port = get_pia_port()
