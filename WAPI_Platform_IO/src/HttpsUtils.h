@@ -81,7 +81,7 @@ String sendHttpsGet(String url)
     // if (WiFi.status() != WL_CONNECTED)
     if (true)
     {
-        return (send_http_sim(url));
+        return (send_http_sim_get(url));
     }
 
     return (sendHttpsGet_wifi(url.c_str()));
@@ -133,6 +133,7 @@ String send_message_to_contact(const String &contact, const String &message)
 {
     Serial.println(contact);
     Serial.println(message);
+
     String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/send_message_to_contact";
 
     String payload = "{\"content\":{\"contact\":\"" + contact + "\",\"message\":\"" + message + "\"}}";

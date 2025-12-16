@@ -26,8 +26,8 @@ void setup(void)
   char *password = "Minecraft123!";
   conenct_to_wifi(ssid, password);
 
-  // whatsapp_main();
-  whatsapp_chat_main("Elmar");
+  whatsapp_main();
+  // whatsapp_chat_main("Elmar");
 }
 
 void draw_apps_loop()

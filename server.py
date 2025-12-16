@@ -129,13 +129,32 @@ def start_thread():
     thread = threading.Thread(target=whatsapp.start, kwargs={"headless": False}, daemon=True)
     thread.start()
 
+def get_pia_port():
+    import subprocess
+
+    piactl_path = r"C:\Program Files\Private Internet Access\piactl.exe"
+
+    result = subprocess.run(
+        [piactl_path, "get", "portforward"],
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip())
+
+    return result.stdout.strip()
+
+
 if __name__ == '__main__':
     print(encrypt_data(api_key,api_encryption_key))
     start_thread()
     context = ('cert.pem', 'key.pem')  # (cert, key)
+    port = get_pia_port()
+    print(port)
     app.run(
         host='0.0.0.0',
-        port=34641,
+        port=port,
         debug=False,
         ssl_context=context
     )

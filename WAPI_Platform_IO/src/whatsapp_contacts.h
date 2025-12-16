@@ -18,6 +18,7 @@ std::vector<String> unread_contacts;
 
 void init_contacts()
 {
+  display_simple_text("Get request for contacts sent");
   String response = get_whatsapp_info("get_contacts");
   contacts = parseJsonArray(response);
 
@@ -26,6 +27,7 @@ void init_contacts()
   unread_contacts = parseJsonArray(response);
 
   printf("Contacts jsoned\n");
+  display_simple_text("Contacts Jsoned");
 }
 
 void fetch_and_disp_contacts()
@@ -34,15 +36,19 @@ void fetch_and_disp_contacts()
 
   init_contacts();
   printf("Contacts init\n");
+  display_simple_text("Contacts Initialized");
+
   draw_contacts(contacts, unread_contacts, selected_contact);
 }
 
 void whatsapp_main()
 {
   printf("Whatsapp Main\n");
+  display_simple_text("Whatsapp Main");
 
   keypadInit();
   printf("Keypad init\n");
+  display_simple_text("Keypad Init");
 
   fetch_and_disp_contacts();
 

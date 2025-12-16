@@ -23,11 +23,17 @@ String waitForURC(String token, unsigned long timeoutMs = 10000)
                 Serial.println("URC: " + line);
 
             if (line.startsWith(token))
+            {
+                display_simple_text(line);
+
                 return line;
+            }
         }
     }
 
     Serial.println("Timeout waiting for URC: " + String(token));
+    display_simple_text("Timeout waiting for URC: " + String(token));
+
     return "";
 }
 
@@ -70,6 +76,7 @@ bool wait_for_ip()
 {
     String ip = "0.0.0.0";
     unsigned long start = millis();
+    display_simple_text("Getting IP...");
 
     while (ip == "0.0.0.0")
     {
@@ -82,6 +89,7 @@ bool wait_for_ip()
         if (millis() - start > 30000)
         {
             Serial.println("Timeout waiting for IP address");
+            display_simple_text("Timeout waiting for IP address");
             return false;
         }
 
@@ -89,6 +97,7 @@ bool wait_for_ip()
     }
 
     Serial.println("IP acquired: " + ip);
+    display_simple_text("IP acquired: " + ip);
     return true;
 }
 
@@ -99,6 +108,7 @@ bool sim_init()
 
     delay(1000);
     Serial.println("Serial connection ready");
+    display_simple_text("Serial connection ready");
 
     modem.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
     send_and_wait("AT", "OK");
@@ -155,8 +165,10 @@ String http_read_content()
 }
 
 //! PUBLIC
-String send_http_sim(String address)
+String send_http_sim_get(String address)
 {
+    display_simple_text("Sending sim HTTP GET");
+
     if (!sim_is_initialized)
     {
         bool could_init_sim = sim_init();
@@ -194,6 +206,8 @@ String send_http_sim(String address)
 //! PUBLIC
 String send_http_post_sim(String address, String post_data)
 {
+    display_simple_text("Sending sim HTTP POST:\n" + address + "\n" + post_data);
+
     if (!sim_is_initialized)
     {
         bool could_init_sim = sim_init();
