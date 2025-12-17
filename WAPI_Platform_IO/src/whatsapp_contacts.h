@@ -46,7 +46,7 @@ void whatsapp_main()
   printf("Whatsapp Main\n");
   display_simple_text("Whatsapp Main");
 
-  keypadInit();
+  keypad_init();
   printf("Keypad init\n");
   display_simple_text("Keypad Init");
 
@@ -56,7 +56,7 @@ void whatsapp_main()
 
   while (1)
   {
-    char key = keypadGetKey();
+    char key = keypad_get_key();
 
     if (key == '2')
       selected_contact--;

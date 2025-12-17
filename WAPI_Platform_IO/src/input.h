@@ -38,7 +38,7 @@ static const char KEYMAP[4][3] = {
    Initialization
    ========================= */
 
-void keypadInit()
+void keypad_init()
 {
   /* Columns: outputs, idle HIGH */
   for (int c = 0; c < 3; c++)
@@ -58,16 +58,19 @@ void keypadInit()
    Key scan
    ========================= */
 
-char keypadGetKey()
+char keypad_get_key()
 {
   static uint32_t lastScanTime = 0;
-  static char lastKey = '\0';
+  static uint32_t lastSendTime = 0;
+  static char lastSentKey = '\0';
 
-  /* Simple debounce timing */
+  /* Scan debounce */
   if (millis() - lastScanTime < 30)
   {
     return '\0';
   }
+
+  lastScanTime = millis();
 
   for (int c = 0; c < 3; c++)
   {
@@ -79,15 +82,21 @@ char keypadGetKey()
       if (digitalRead(ROW_PINS[r]) == LOW)
       {
         char key = KEYMAP[r][c];
+        uint32_t now = millis();
 
-        /* Prevent repeat until release */
-        if (key != lastKey)
+        /* Suppress same key within 200 ms */
+        if (key == lastSentKey && (now - lastSendTime) < 200)
         {
-          lastKey = key;
-          lastScanTime = millis();
           digitalWrite(COL_PINS[c], HIGH);
-          return key;
+          return '\0';
         }
+
+        /* Accept key */
+        lastSentKey = key;
+        lastSendTime = now;
+
+        digitalWrite(COL_PINS[c], HIGH);
+        return key;
       }
     }
 
@@ -95,7 +104,5 @@ char keypadGetKey()
     digitalWrite(COL_PINS[c], HIGH);
   }
 
-  /* Reset state when no key is pressed */
-  lastKey = '\0';
   return '\0';
 }

@@ -171,7 +171,7 @@ void whatsapp_chat_main(const char *contact)
 
     while (1)
     {
-        char key = keypadGetKey();
+        char key = keypad_get_key();
 
         if (key == '#')
             type_mode = !type_mode;
