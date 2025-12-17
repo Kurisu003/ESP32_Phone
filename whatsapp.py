@@ -245,39 +245,36 @@ def send_message_to_contact(contact_name: str, text: str) -> bool:
 
     with _driver_lock:
         try:
-            # Restrict lookup to the chat footer to avoid sidebar/search boxes
+            # Focus on the footer composer
             footer = WebDriverWait(driver, 15).until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, "footer")
-                )
+                EC.presence_of_element_located((By.CSS_SELECTOR, "footer"))
             )
-
             box = WebDriverWait(footer, 15).until(
-                EC.presence_of_element_located(
+                EC.element_to_be_clickable(
                     (By.CSS_SELECTOR, "div[role='textbox'][contenteditable='true']")
                 )
             )
+            box.click()
+            time.sleep(0.2)
 
-            # Ensure focus is inside the composer
-            driver.execute_script(
-                "arguments[0].focus(); arguments[0].innerHTML='';", box
-            )
-            time.sleep(0.1)
+            # Use clipboard paste (reliable for React)
+            import pyperclip
+            pyperclip.copy(text)
 
-            # Type message line-by-line to preserve newlines
+            from selenium.webdriver.common.action_chains import ActionChains
+            from selenium.webdriver.common.keys import Keys
+
             actions = ActionChains(driver)
-            lines = text.split("\n")
+            # Use OS-specific paste shortcut
+            import platform
+            if platform.system() == "Darwin":
+                actions.key_down(Keys.COMMAND).send_keys('v').key_up(Keys.COMMAND).perform()
+            else:
+                actions.key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
+            time.sleep(0.2)
 
-            for i, line in enumerate(lines):
-                if line:
-                    box.send_keys(line)
-                if i < len(lines) - 1:
-                    actions.key_down(Keys.SHIFT).send_keys(Keys.ENTER).key_up(Keys.SHIFT).perform()
-                    time.sleep(0.05)
-
-            time.sleep(0.15)
+            # Send the message
             box.send_keys(Keys.ENTER)
-
             print(f"Sent to {contact_name}: {text}")
             return True
 
