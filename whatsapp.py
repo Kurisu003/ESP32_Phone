@@ -234,27 +234,57 @@ def list_contacts(search_prefix: str = "", max_results: int = 500) -> list[str]:
 
     return contacts  # ← No sorting, preserves WhatsApp's natural order
 
-def send_message_to_contact(contact_name, text):
+def send_message_to_contact(contact_name: str, text: str) -> bool:
+    if not text:
+        return False
+
     if not _open_contact(contact_name):
         return False
+
     driver = _ensure_driver()
+
     with _driver_lock:
         try:
-            box = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable(
-                    (By.CSS_SELECTOR, "div[contenteditable='true'][data-tab='10']")
+            # Restrict lookup to the chat footer to avoid sidebar/search boxes
+            footer = WebDriverWait(driver, 15).until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "footer")
                 )
             )
-            pyperclip.copy(text)
-            box.click()
-            ActionChains(driver).key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
-            time.sleep(0.3)
+
+            box = WebDriverWait(footer, 15).until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "div[role='textbox'][contenteditable='true']")
+                )
+            )
+
+            # Ensure focus is inside the composer
+            driver.execute_script(
+                "arguments[0].focus(); arguments[0].innerHTML='';", box
+            )
+            time.sleep(0.1)
+
+            # Type message line-by-line to preserve newlines
+            actions = ActionChains(driver)
+            lines = text.split("\n")
+
+            for i, line in enumerate(lines):
+                if line:
+                    box.send_keys(line)
+                if i < len(lines) - 1:
+                    actions.key_down(Keys.SHIFT).send_keys(Keys.ENTER).key_up(Keys.SHIFT).perform()
+                    time.sleep(0.05)
+
+            time.sleep(0.15)
             box.send_keys(Keys.ENTER)
+
             print(f"Sent to {contact_name}: {text}")
             return True
+
         except Exception as e:
             print(f"[send] error: {e}")
             return False
+
 
 def has_unread_notifications() -> tuple[bool, list[str]]:
     driver = _ensure_driver()
