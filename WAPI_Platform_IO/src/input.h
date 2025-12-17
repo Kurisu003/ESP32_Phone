@@ -1,83 +1,101 @@
 #include <Arduino.h>
 #include "variables.h"
-// Pin definitions for ESP32
-const int COL2 = 13;  // D13 -> Column 2
-const int ROW1 = 12;  // D12 -> Row 1
-const int COL1 = 14;  // D14 -> Column 1
-const int ROW4 = 27;  // D27 -> Row 4
-const int COL3 = 26;  // D26 -> Column 3
-const int ROW3 = 25;  // D25 -> Row 3
-const int ROW2 = 33;  // D33 -> Row 2
 
-// Array of column pins (to drive low one at a time)
-const int COL_PINS[3] = {COL1, COL2, COL3};
+/* =========================
+   Pin definitions (ESP32)
+   ========================= */
 
-// Array of row pins (to read input)
-const int ROW_PINS[4] = {ROW1, ROW2, ROW3, ROW4};
+#define Pin_1 33
+#define Pin_2 25
+#define Pin_3 26
+#define Pin_4 27
+#define Pin_5 14
+#define Pin_6 12
+#define Pin_7 13
 
-// Keymap: 4 rows x 3 columns = 12 keys
-// Customize the characters as needed
-const char KEYMAP[4][3] = {
-  {'1', '2', '3'},
-  {'4', '5', '6'},
-  {'7', '8', '9'},
-  {'*', '0', '#'}
-};
+const int ROW3 = Pin_1;
+const int ROW2 = Pin_2;
+const int COL1 = Pin_3;
+const int ROW1 = Pin_4;
+const int COL3 = Pin_5;
+const int ROW4 = Pin_6;
+const int COL2 = Pin_7;
 
-void keypadInit() {
-  // Columns: output, default HIGH (inactive)
-  pinMode(COL1, OUTPUT);
-  pinMode(COL2, OUTPUT);
-  pinMode(COL3, OUTPUT);
-  digitalWrite(COL1, HIGH);
-  digitalWrite(COL2, HIGH);
-  digitalWrite(COL3, HIGH);
+/* =========================
+   Keypad configuration
+   ========================= */
 
-  // Rows: input with internal pull-up
-  pinMode(ROW1, INPUT_PULLUP);
-  pinMode(ROW2, INPUT_PULLUP);
-  pinMode(ROW3, INPUT_PULLUP);
-  pinMode(ROW4, INPUT_PULLUP);
-}
+static const int COL_PINS[3] = {COL1, COL2, COL3};
+static const int ROW_PINS[4] = {ROW1, ROW2, ROW3, ROW4};
 
-char keypadGetKey() {
-  // Configure columns as input with pull-up
-  for (int c = 0; c < 3; c++) {
-    pinMode(COL_PINS[c], INPUT_PULLUP);
+static const char KEYMAP[4][3] = {
+    {'1', '2', '3'},
+    {'4', '5', '6'},
+    {'7', '8', '9'},
+    {'*', '0', '#'}};
+
+/* =========================
+   Initialization
+   ========================= */
+
+void keypadInit()
+{
+  /* Columns: outputs, idle HIGH */
+  for (int c = 0; c < 3; c++)
+  {
+    pinMode(COL_PINS[c], OUTPUT);
+    digitalWrite(COL_PINS[c], HIGH);
   }
 
-  char key = '\0';
-
-  // Scan rows
-  for (int r = 0; r < 4; r++) {
-    // Set all rows to HIGH (inactive)
-    for (int i = 0; i < 4; i++) {
-      pinMode(ROW_PINS[i], OUTPUT);
-      digitalWrite(ROW_PINS[i], HIGH);
-    }
-
-    // Drive only the current row LOW
-    digitalWrite(ROW_PINS[r], LOW);
-
-    // Check each column
-    for (int c = 0; c < 3; c++) {
-      if (digitalRead(COL_PINS[c]) == LOW) {
-        delay(20); // debounce
-        while (digitalRead(COL_PINS[c]) == LOW); // wait for release
-        key = KEYMAP[r][c];
-        break;
-      }
-    }
-    if (key != '\0') break;
-  }
-
-  // Optional: reset pins to safe state
-  for (int r = 0; r < 4; r++) {
+  /* Rows: inputs with pull-ups */
+  for (int r = 0; r < 4; r++)
+  {
     pinMode(ROW_PINS[r], INPUT_PULLUP);
   }
-  for (int c = 0; c < 3; c++) {
-    pinMode(COL_PINS[c], INPUT_PULLUP);
+}
+
+/* =========================
+   Key scan
+   ========================= */
+
+char keypadGetKey()
+{
+  static uint32_t lastScanTime = 0;
+  static char lastKey = '\0';
+
+  /* Simple debounce timing */
+  if (millis() - lastScanTime < 30)
+  {
+    return '\0';
   }
 
-  return key;
+  for (int c = 0; c < 3; c++)
+  {
+    /* Activate column */
+    digitalWrite(COL_PINS[c], LOW);
+
+    for (int r = 0; r < 4; r++)
+    {
+      if (digitalRead(ROW_PINS[r]) == LOW)
+      {
+        char key = KEYMAP[r][c];
+
+        /* Prevent repeat until release */
+        if (key != lastKey)
+        {
+          lastKey = key;
+          lastScanTime = millis();
+          digitalWrite(COL_PINS[c], HIGH);
+          return key;
+        }
+      }
+    }
+
+    /* Deactivate column */
+    digitalWrite(COL_PINS[c], HIGH);
+  }
+
+  /* Reset state when no key is pressed */
+  lastKey = '\0';
+  return '\0';
 }

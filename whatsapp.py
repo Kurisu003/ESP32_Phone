@@ -113,7 +113,9 @@ def _wrap_text(text, width=16):
 def get_messages_from_contact(contact_name, max_messages=500):
     if not _open_contact(contact_name):
         return []
+
     driver = _ensure_driver()
+
     with _driver_lock:
         msgs = []
         try:
@@ -121,26 +123,54 @@ def get_messages_from_contact(contact_name, max_messages=500):
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='textbox']"))
             )
             time.sleep(0.8)
-            bubbles = driver.find_elements(By.CSS_SELECTOR, "div.message-in, div.message-out")
+
+            bubbles = driver.find_elements(
+                By.CSS_SELECTOR, "div.message-in, div.message-out"
+            )
+
             for b in bubbles[-max_messages:]:
                 try:
                     out = "message-out" in b.get_attribute("class")
                     sender = "You" if out else contact_name
+
+                    # --- Correct text extraction (new DOM) ---
                     txt_parts = [
-                        t.text.strip()
-                        for t in b.find_elements(By.CSS_SELECTOR, "span.selectable-text span")
-                        if t.text.strip()
+                        el.text.strip()
+                        for el in b.find_elements(
+                            By.CSS_SELECTOR,
+                            "span[data-testid='selectable-text'] span"
+                        )
+                        if el.text.strip()
                     ]
+
                     txt = " ".join(txt_parts)
-                    img = bool(b.find_elements(By.CSS_SELECTOR, "img, div[data-animate='true']"))
-                    final = f"{txt} [img]" if img and txt else txt or "[img]"
-                    if final:
-                        wrapped, line_count = _wrap_text(final)
-                        msgs.append([sender, wrapped, line_count])
-                except:
+
+                    # --- Media detection ---
+                    img = bool(
+                        b.find_elements(
+                            By.CSS_SELECTOR,
+                            "img[src^='blob:'], video, canvas"
+                        )
+                    )
+
+                    if txt and img:
+                        final = f"{txt} [img]"
+                    elif txt:
+                        final = txt
+                    elif img:
+                        final = "[img]"
+                    else:
+                        continue
+
+                    wrapped, line_count = _wrap_text(final)
+                    msgs.append([sender, wrapped, line_count])
+
+                except Exception:
                     continue
+
         except Exception as e:
             print(f"[get_messages] error: {e}")
+
         return msgs
 
 def list_contacts(search_prefix: str = "", max_results: int = 500) -> list[str]:

@@ -12,6 +12,7 @@ TFT_eSPI tft = TFT_eSPI(); // Invoke custom library
 //! Public
 void screen_init()
 {
+    tft.setRotation(2);
     // Use this initializer if you're using a 1.8" TFT
 
     // tft.height(), etc, wroks

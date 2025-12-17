@@ -27,6 +27,8 @@ void setup(void)
   conenct_to_wifi(ssid, password);
 
   whatsapp_main();
+  // keypadInit();
+
   // whatsapp_chat_main("Elmar");
 }
 
