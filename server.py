@@ -126,8 +126,8 @@ if __name__ == '__main__':
     context = ('cert.pem', 'key.pem')  # (cert, key)
     port = get_pia_port()
     print(port)
-    time.sleep(10)
-    whatsapp.send_message_to_contact("Mars","hallo mars dies ist ein test")
+    # time.sleep(10)
+    # whatsapp.send_message_to_contact("Mars","hallo mars dies ist ein test")
 
     app.run(
         host='0.0.0.0',
