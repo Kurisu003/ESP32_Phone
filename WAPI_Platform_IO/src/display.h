@@ -291,4 +291,111 @@ void draw_selected_frame(int selected)
     tft.drawRect(x_index * 48, y_index * 42, 32, 32, TFT_BLUE);
 }
 
+void draw_rect_matrix(
+    int start_x,
+    int start_y,
+    int amount_x,
+    int amount_y,
+    int rect_size_x,
+    int rect_size_y,
+    int spacing_x,
+    int spacing_y)
+{
+    for (int y = 0; y < amount_y; y++)
+    {
+        for (int x = 0; x < amount_x; x++)
+        {
+            int draw_x = start_x + x * (rect_size_x + spacing_x);
+            int draw_y = start_y + y * (rect_size_y + spacing_y);
+
+            tft.drawRect(
+                draw_x,
+                draw_y,
+                rect_size_x,
+                rect_size_y,
+                TFT_WHITE);
+        }
+    }
+}
+
+#define calc_matrix_x_offset 2
+#define calc_matrix_y_offset 50
+#define calc_matrix_x_amount 4
+#define calc_matrix_y_amount 4
+#define calc_matrix_x_size 25
+#define calc_matrix_y_size 25
+#define calc_matrix_x_spacing 8
+#define calc_matrix_y_spacing 3
+
+//! Private
+void draw_orange_square_at_index(int x_index, int y_index)
+{
+    int x = calc_matrix_x_offset + (calc_matrix_x_size + calc_matrix_x_spacing) * x_index;
+    int y = calc_matrix_y_offset + (calc_matrix_y_size + calc_matrix_y_spacing) * y_index;
+    // B G R NOT R G B
+    tft.fillRect(x, y, calc_matrix_x_size - 1, calc_matrix_y_size - 1, tft.color565(0, 165, 255));
+}
+
+//! Private
+void draw_calculator_interface()
+{
+    fill_screen_black();
+
+    draw_orange_square_at_index(3, 0);
+    draw_orange_square_at_index(3, 1);
+    draw_orange_square_at_index(3, 2);
+    draw_orange_square_at_index(3, 3);
+    draw_orange_square_at_index(3, 2);
+
+    draw_rect_matrix(
+        calc_matrix_x_offset,
+        calc_matrix_y_offset,
+        calc_matrix_x_amount,
+        calc_matrix_y_amount,
+        calc_matrix_x_size,
+        calc_matrix_y_size,
+        calc_matrix_x_spacing,
+        calc_matrix_y_spacing);
+
+    tft.setTextSize(2);
+
+    const int base_x = 10;
+    const int base_y = 55;
+    const int step_x = calc_matrix_x_size + calc_matrix_x_spacing;
+    const int step_y = calc_matrix_y_size + calc_matrix_y_spacing;
+
+    for (int y = 0; y < 4; y++)
+    {
+        for (int x = 0; x < 4; x++)
+        {
+            tft.setCursor(
+                base_x + x * step_x,
+                base_y + y * step_y);
+
+            tft.print(calculator_keys[y][x]);
+        }
+    }
+}
+
+void draw_calculator_expression(String expr)
+{
+    tft.setTextSize(1);
+    tft.setCursor(0, 0);
+    tft.print(expr);
+}
+
+void draw_calculator_result(String res)
+{
+    tft.setTextSize(1);
+    tft.setCursor(0, 20);
+    tft.print(res);
+}
+
+void draw_selected_calc_square(int selected_x, int selected_y)
+{
+    int y = selected_y * (calc_matrix_x_size + calc_matrix_y_spacing) + calc_matrix_y_offset;
+    int x = selected_x * (calc_matrix_x_size + calc_matrix_x_spacing) + calc_matrix_x_offset;
+    tft.drawRect(x, y, calc_matrix_x_size, calc_matrix_y_size, TFT_BLUE);
+}
+
 #endif

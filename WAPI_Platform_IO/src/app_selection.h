@@ -4,6 +4,7 @@
 #include "variables.h"
 #include "display.h"
 #include "image_data.h"
+#include "calculator.h"
 
 #include "whatsapp_contacts.h"
 // #include "input.h"
@@ -15,30 +16,33 @@
 RLE_Pixel *app_images[] = {
     settings_icon,
     whatsapp_icon,
-    whatsapp_icon,
     calc_icon};
 
 int app_images_lengths[] = {
     settings_length,
     whatsapp_length,
-    whatsapp_length,
     calc_length};
 
 int num_app_images = sizeof(app_images) / sizeof(app_images[0]);
 
-int selected_app = 3;
+int selected_app = 0;
 
 void start_app()
 {
     switch (selected_app)
     {
-    case 2:
+    case 1:
         whatsapp_main();
+        selected_app = 0;
+        break;
+    case 2:
+        calculator_main();
+        selected_app = 0;
         break;
     }
 }
 
-void handle_input()
+void handle_app_selection_input()
 {
     char key = keypad_get_key();
     if (key == '\0')
@@ -66,11 +70,10 @@ void handle_input()
 void app_selection_main()
 {
     int previously_selected_app = -1;
-    // Later to be called only when something chagned
     while (true)
     {
         delay(20);
-        handle_input();
+        handle_app_selection_input();
 
         if (selected_app == previously_selected_app)
             continue;

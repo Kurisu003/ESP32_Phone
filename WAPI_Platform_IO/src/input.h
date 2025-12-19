@@ -1,3 +1,5 @@
+#ifndef INPUT_H
+#define INPUT_H
 #include <Arduino.h>
 #include "variables.h"
 
@@ -106,3 +108,4 @@ char keypad_get_key()
 
   return '\0';
 }
+#endif
