@@ -175,4 +175,13 @@ void render_whatsapp_typed_text(String current_text)
     tft.print(current_text);
 }
 
+//! Private
+void set_pixel_color(int x, int y, int r, int g, int b)
+{
+    uint16_t color = tft.color565(r, g, b);
+    tft.drawPixel(x, y, color);
+}
+
+
+
 #endif
