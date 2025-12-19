@@ -122,16 +122,18 @@ def get_pia_port():
 
 
 if __name__ == '__main__':
+    # time.sleep(10)
+    # whatsapp.send_message_to_contact("Mars","hallo mars dies ist ein test")
     start_thread()
     context = ('cert.pem', 'key.pem')  # (cert, key)
     port = get_pia_port()
     print(port)
-    # time.sleep(10)
-    # whatsapp.send_message_to_contact("Mars","hallo mars dies ist ein test")
-
-    app.run(
-        host='0.0.0.0',
-        port=port,
-        debug=False,
-        ssl_context=context
-    )
+    if(port == "Inactive"):
+        print("Turn on VPN")
+    else:
+        app.run(
+            host='0.0.0.0',
+            port=port,
+            debug=False,
+            ssl_context=context
+        )
