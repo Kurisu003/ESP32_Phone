@@ -233,12 +233,17 @@ void whatsapp_chat_main(const char *contact)
 
                 // render_text(currentText); // Your function to update display
             }
+            // either delete or refetch text
             if (key == '*')
             {
                 if (current_text.length() > 0)
                 {
                     current_text.remove(current_text.length() - 1);
                     // render_text(currentText);
+                }
+                else
+                {
+                    fresh_chat_init(contact);
                 }
                 lastKey = 0; // reset so it doesn't interfere with cycling
                 pressCount = 0;

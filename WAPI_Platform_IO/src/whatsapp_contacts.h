@@ -73,6 +73,8 @@ void whatsapp_main()
       // after exiting from chat with person, it should be reinitialized
       fetch_and_disp_contacts();
     }
+    else if (key == '*')
+      return;
 
     selected_contact %= contacts.size();
 

@@ -4,15 +4,24 @@
 #include <WiFi.cpp>
 
 //! Public
-void conenct_to_wifi(char *ssid, char *password)
+void connect_to_wifi(char *ssid, char *password)
 {
     WiFi.begin(ssid, password);
+    unsigned long startTime = millis(); // Record the start time
+
     while (WiFi.status() != WL_CONNECTED)
     {
-        delay(500);
-        tft.setCursor(0, 0);
-        tft.print("Connecting to WiFi...");
+        display_simple_text("Connecting to WiFi...");
+
+        // Check if 10 seconds have passed
+        if (millis() - startTime >= 10000)
+        {
+            display_simple_text("WiFi connection timed out!");
+            return;
+        }
     }
+
+    display_simple_text("WiFi Connected :)");
 }
 
 #endif

@@ -12,4 +12,11 @@ struct ChatLine
     uint16_t color;
 };
 
+struct RLE_Pixel
+{
+    uint16_t count;
+    uint16_t color; // RGB565
+};
+
+
 #endif

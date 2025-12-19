@@ -2,8 +2,8 @@
 #include "variables.h"
 
 /* =========================
-   Pin definitions (ESP32)
-   ========================= */
+Pin definitions (ESP32)
+========================= */
 
 #define Pin_1 33
 #define Pin_2 25
@@ -22,8 +22,8 @@ const int ROW4 = Pin_6;
 const int COL2 = Pin_7;
 
 /* =========================
-   Keypad configuration
-   ========================= */
+Keypad configuration
+========================= */
 
 static const int COL_PINS[3] = {COL1, COL2, COL3};
 static const int ROW_PINS[4] = {ROW1, ROW2, ROW3, ROW4};
@@ -35,8 +35,8 @@ static const char KEYMAP[4][3] = {
     {'*', '0', '#'}};
 
 /* =========================
-   Initialization
-   ========================= */
+Initialization
+========================= */
 
 void keypad_init()
 {

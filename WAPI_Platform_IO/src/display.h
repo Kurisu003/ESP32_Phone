@@ -7,38 +7,48 @@
 #include <TFT_eSPI.h> // Hardware-specific library
 #include <vector>
 
+#define IMG_W 32
+#define IMG_H 32
+
+bool display_initialized = false;
+
 TFT_eSPI tft = TFT_eSPI(); // Invoke custom library
 
+// Use this initializer if you're using a 1.8" TFT
+
+// tft.height(), etc, wroks
+// fill versions also availible
+// x, y, w, h
+// tft.drawRect(0, 0, 10, 10, TFT_WHITE);
+// tft.drawLine(10, 10, 20, 20, TFT_WHITE);
+
+// tft.setCursor(40, 40);
+// tft.setTextColor(TFT_WHITE);
+// tft.setTextWrap(true);
+
+// x, y
+// tft.setCursor(0, 30);
+// tft.print("Penis");
+
+// tft.drawCircle(60, 60, 10, TFT_WHITE);
+
+// tft.drawTriangle(x_1, y_1, x_2, y_2, x_3, y_3, color);
+// tft.fillTriangle(0, 0, 100, 0, 50, 50, TFT_BLUE);
+
+// tft.drawRoundRect(x, y, w, h, 5, color);
 //! Public
 void screen_init()
 {
-    tft.setRotation(2);
-    // Use this initializer if you're using a 1.8" TFT
+    if (!display_initialized)
+    {
+        tft.setRotation(2);
 
-    // tft.height(), etc, wroks
-    // fill versions also availible
-    // x, y, w, h
-    // tft.drawRect(0, 0, 10, 10, TFT_WHITE);
-    // tft.drawLine(10, 10, 20, 20, TFT_WHITE);
+        tft.init(); // initialize a ST7735S chip
+        tft.invertDisplay(0);
 
-    // tft.setCursor(40, 40);
-    // tft.setTextColor(TFT_WHITE);
-    // tft.setTextWrap(true);
-
-    // x, y
-    // tft.setCursor(0, 30);
-    // tft.print("Penis");
-
-    // tft.drawCircle(60, 60, 10, TFT_WHITE);
-
-    // tft.drawTriangle(x_1, y_1, x_2, y_2, x_3, y_3, color);
-    // tft.fillTriangle(0, 0, 100, 0, 50, 50, TFT_BLUE);
-
-    // tft.drawRoundRect(x, y, w, h, 5, color);
-    tft.init(); // initialize a ST7735S chip
-    tft.invertDisplay(0);
-
-    tft.fillScreen(TFT_BLACK);
+        tft.fillScreen(TFT_BLACK);
+        display_initialized = true;
+    }
 }
 
 //! Public
@@ -182,6 +192,103 @@ void set_pixel_color(int x, int y, int r, int g, int b)
     tft.drawPixel(x, y, color);
 }
 
+//! Private
+static inline void rgb565_to_rgb888(
+    uint16_t c,
+    uint8_t *r,
+    uint8_t *g,
+    uint8_t *b)
+{
+    *r = ((c >> 11) & 0x1F) << 3;
+    *g = ((c >> 5) & 0x3F) << 2;
+    *b = (c & 0x1F) << 3;
+}
 
+//! Private
+void decode_rle_32x32(
+    const RLE_Pixel *data,
+    uint32_t data_len,
+    uint8_t rgb[IMG_H][IMG_W][3])
+{
+    uint32_t pixel_index = 0;
+    const uint32_t max_pixels = IMG_W * IMG_H;
+
+    for (uint32_t i = 0; i < data_len && pixel_index < max_pixels; i++)
+    {
+        uint16_t run = data[i].count;
+        uint16_t color = data[i].color;
+
+        uint8_t r, g, b;
+        rgb565_to_rgb888(color, &r, &g, &b);
+
+        for (uint16_t j = 0; j < run && pixel_index < max_pixels; j++)
+        {
+            uint16_t x = pixel_index % IMG_W;
+            uint16_t y = pixel_index / IMG_W;
+
+            rgb[y][x][0] = r;
+            rgb[y][x][1] = g;
+            rgb[y][x][2] = b;
+
+            pixel_index++;
+        }
+    }
+}
+
+//! Public
+void draw_image_at_position(int x_offset, int y_offset, RLE_Pixel *image_data, int image_data_len)
+{
+    uint8_t image_rgb[IMG_H][IMG_W][3];
+    decode_rle_32x32(image_data, image_data_len, image_rgb);
+
+    for (uint16_t y = 0; y < IMG_H; y++)
+    {
+        for (uint16_t x = 0; x < IMG_W; x++)
+        {
+            int r = image_rgb[y][x][0];
+            int g = image_rgb[y][x][1];
+            int b = image_rgb[y][x][2];
+            set_pixel_color(x + x_offset, y + y_offset, r, g, b);
+        }
+        Serial.println();
+    }
+}
+
+//! Public
+void draw_apps(RLE_Pixel **app_images, int *app_images_lengths, int num_app_images)
+{
+    fill_screen_black();
+    int x = 0;                    // starting x position
+    int y = 0;                    // starting y position
+    const int spacing_x = 48;     // horizontal spacing between images
+    const int spacing_y = 42;     // vertical spacing when wrapping to next row
+    const int images_per_row = 3; // number of images per row
+
+    for (int i = 0; i < num_app_images; i++)
+    {
+        RLE_Pixel *current_image = app_images[i];
+        int length = app_images_lengths[i];
+
+        // Draw the image at the current position
+        draw_image_at_position(x, y, current_image, length);
+
+        // Move to the next horizontal position
+        x += spacing_x;
+
+        // After every 3 images, move to next row
+        if ((i + 1) % images_per_row == 0)
+        {
+            x = 0;          // reset x to start
+            y += spacing_y; // move down
+        }
+    }
+}
+
+void draw_selected_frame(int selected)
+{
+    int x_index = selected % 3;
+    int y_index = selected / 3;
+    tft.drawRect(x_index * 48, y_index * 42, 32, 32, TFT_BLUE);
+}
 
 #endif
