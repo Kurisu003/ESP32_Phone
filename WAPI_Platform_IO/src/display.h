@@ -179,6 +179,12 @@ int get_tft_width()
 }
 
 //! Public
+void set_tft_rotation(int rotation)
+{
+    tft.setRotation(rotation);
+}
+
+//! Public
 void render_whatsapp_typed_text(String current_text)
 {
     tft.setCursor(2, 132);
@@ -291,6 +297,7 @@ void draw_selected_frame(int selected)
     tft.drawRect(x_index * 48, y_index * 42, 32, 32, TFT_BLUE);
 }
 
+//! Public
 void draw_rect_matrix(
     int start_x,
     int start_y,
@@ -317,15 +324,6 @@ void draw_rect_matrix(
         }
     }
 }
-
-#define calc_matrix_x_offset 2
-#define calc_matrix_y_offset 50
-#define calc_matrix_x_amount 4
-#define calc_matrix_y_amount 4
-#define calc_matrix_x_size 25
-#define calc_matrix_y_size 25
-#define calc_matrix_x_spacing 8
-#define calc_matrix_y_spacing 3
 
 //! Private
 void draw_orange_square_at_index(int x_index, int y_index)
@@ -393,9 +391,122 @@ void draw_calculator_result(String res)
 
 void draw_selected_calc_square(int selected_x, int selected_y)
 {
-    int y = selected_y * (calc_matrix_x_size + calc_matrix_y_spacing) + calc_matrix_y_offset;
+    int y = selected_y * (calc_matrix_y_size + calc_matrix_y_spacing) + calc_matrix_y_offset;
     int x = selected_x * (calc_matrix_x_size + calc_matrix_x_spacing) + calc_matrix_x_offset;
     tft.drawRect(x, y, calc_matrix_x_size, calc_matrix_y_size, TFT_BLUE);
+}
+
+String scrollable_text_box(int x, int y, int width, int height, String text, int scrollPos, int selected_line)
+{
+    const int lineHeight = 10; // adjust to your font
+    int numVisibleLines = height / lineHeight;
+
+    // Split text into lines by '\n'
+    int textLength = text.length();
+    int start = 0;
+    int lineCount = 0;
+    String lines[100]; // maximum 100 lines
+    for (int i = 0; i <= textLength; i++)
+    {
+        if (i == textLength || text[i] == '\n')
+        {
+            lines[lineCount++] = text.substring(start, i);
+            start = i + 1;
+        }
+    }
+
+    // Clamp scroll position
+    if (scrollPos < 0)
+        scrollPos = 0;
+    if (scrollPos > lineCount - numVisibleLines)
+        scrollPos = lineCount - numVisibleLines;
+    if (scrollPos < 0)
+        scrollPos = 0; // in case text has fewer lines than numVisibleLines
+
+    // Draw the box
+    tft.fillRect(x, y, width, height, TFT_BLACK);
+    tft.drawRect(x, y, width, height, TFT_WHITE);
+
+    // Draw visible lines, clipped to box width
+    int cursorY = y + 2; // small padding
+    for (int i = 0; i < numVisibleLines; i++)
+    {
+        int lineIdx = scrollPos + i;
+        if (lineIdx >= lineCount)
+            break;
+
+        String line = lines[lineIdx];
+        int textWidth = tft.textWidth(line);
+
+        // clip the line if it exceeds the box width
+        while (textWidth > (width - 4) && line.length() > 0)
+        {
+            line.remove(line.length() - 1);
+            textWidth = tft.textWidth(line);
+        }
+
+        tft.setCursor(x + 2, cursorY);
+        tft.print(line);
+
+        // Draw red border around selected line
+        if (lineIdx == selected_line)
+        {
+            tft.drawRect(x, cursorY - 1, width, lineHeight, TFT_RED);
+        }
+
+        cursorY += lineHeight;
+    }
+
+    // Return the line corresponding to selected_line, empty string if out of bounds
+    if (selected_line >= 0 && selected_line < lineCount)
+        return lines[selected_line];
+    else
+        return "";
+}
+
+void draw_keyboard(int keyboard)
+{
+    tft.setTextSize(1);
+
+    const int base_x = keyboard_matrix_x_offset + 3;
+    const int base_y = keyboard_matrix_y_offset + 3;
+    const int step_x = keyboard_matrix_x_size + keyboard_matrix_x_spacing;
+    const int step_y = keyboard_matrix_y_size + keyboard_matrix_y_spacing;
+
+    for (int y = 0; y < keyboard_matrix_y_amount; y++)
+    {
+        for (int x = 0; x < keyboard_matrix_x_amount; x++)
+        {
+            tft.setCursor(
+                base_x + x * step_x,
+                base_y + y * step_y);
+
+            if (keyboard == 0)
+                tft.print(keyboard_keys_normal[y][x]);
+            else if (keyboard == 1)
+                tft.print(keyboard_keys_caps[y][x]);
+            else if (keyboard == 2)
+                tft.print(keyboard_keys_symbols[y][x]);
+        }
+    }
+}
+
+void draw_keyboard_text(String text)
+{
+    tft.setCursor(5, 5);
+    tft.print(text);
+}
+
+void draw_keyboard_selected(int selected_x, int selected_y)
+{
+    int y = selected_y * (keyboard_matrix_y_size + keyboard_matrix_y_spacing) + keyboard_matrix_y_offset;
+    int x = selected_x * (keyboard_matrix_x_size + keyboard_matrix_x_spacing) + keyboard_matrix_x_offset;
+    tft.drawRect(x, y, keyboard_matrix_x_size, keyboard_matrix_y_size, TFT_BLUE);
+}
+
+void blank_keyboard_text_area()
+{
+    tft.fillRect(0, 0, 160, 50, TFT_BLACK);
 }
 
 #endif

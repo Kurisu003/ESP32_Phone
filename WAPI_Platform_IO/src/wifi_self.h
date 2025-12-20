@@ -4,8 +4,38 @@
 #include <WiFi.cpp>
 
 //! Public
-void connect_to_wifi(char *ssid, char *password)
+String list_wifi_networks()
 {
+    int n = WiFi.scanNetworks();
+    String result = "";
+
+    if (n == 0)
+    {
+        result = "No networks found";
+    }
+    else
+    {
+        for (int i = 0; i < n; ++i)
+        {
+            String ssid = WiFi.SSID(i);
+            int rssi = WiFi.RSSI(i);
+            result += ssid + "\n(" + String(rssi) + " dBm)";
+            if (i < n - 1)
+            {
+                result += "\n\n"; // Separate entries with newline
+            }
+        }
+    }
+
+    return result;
+}
+
+//! Public
+void connect_to_wifi(String ssid, String password)
+{
+    Serial.println("Connecting to:");
+    Serial.println(ssid);
+    Serial.println(password);
     WiFi.begin(ssid, password);
     unsigned long startTime = millis(); // Record the start time
 
@@ -20,7 +50,6 @@ void connect_to_wifi(char *ssid, char *password)
             return;
         }
     }
-
     display_simple_text("WiFi Connected :)");
 }
 

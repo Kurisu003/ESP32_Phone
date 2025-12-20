@@ -5,13 +5,10 @@
 #include "display.h"
 #include "image_data.h"
 #include "calculator.h"
+#include "settings.h"
 
 #include "whatsapp_contacts.h"
-// #include "input.h"
-
-// Settings
-// Calc
-// Whatsapp
+#include "input.h"
 
 RLE_Pixel *app_images[] = {
     settings_icon,
@@ -31,13 +28,17 @@ void start_app()
 {
     switch (selected_app)
     {
+    case 0:
+        settings_main();
+        selected_app = 0;
+        break;
     case 1:
         whatsapp_main();
         selected_app = 0;
         break;
     case 2:
         calculator_main();
-        selected_app = 0;
+        selected_app = 1;
         break;
     }
 }

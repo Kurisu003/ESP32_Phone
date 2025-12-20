@@ -60,7 +60,7 @@ void handle_calculator_selection_input()
     if (key == '5')
     {
         char c = *calculator_keys[selected_y][selected_x];
-        if (c == *"=")
+        if (c == '=')
         {
             double result = eval_expression();
 
