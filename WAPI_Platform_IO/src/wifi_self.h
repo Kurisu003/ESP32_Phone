@@ -31,26 +31,33 @@ String list_wifi_networks()
 }
 
 //! Public
-void connect_to_wifi(String ssid, String password)
+bool connect_to_wifi(const String &ssid, const String &password)
 {
     Serial.println("Connecting to:");
     Serial.println(ssid);
     Serial.println(password);
-    WiFi.begin(ssid, password);
-    unsigned long startTime = millis(); // Record the start time
+
+    WiFi.begin(ssid.c_str(), password.c_str()); // ensure const char* compatibility
+    unsigned long startTime = millis();
 
     while (WiFi.status() != WL_CONNECTED)
     {
         display_simple_text("Connecting to WiFi...");
 
-        // Check if 10 seconds have passed
+        // Timeout after 10 seconds
         if (millis() - startTime >= 10000)
         {
             display_simple_text("WiFi connection timed out!");
-            return;
+            Serial.println("WiFi connection failed.");
+            return false; // connection failed
         }
+
+        delay(250); // small delay to avoid busy looping
     }
+
     display_simple_text("WiFi Connected :)");
+    Serial.println("WiFi connected successfully!");
+    return true; // connection succeeded
 }
 
 #endif

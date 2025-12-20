@@ -4,6 +4,9 @@
 #include "wifi_self.h"
 #include "input.h"
 #include "big_keyboard.h"
+#include "storage.h"
+
+#include <vector>
 
 int scroll_height = 0;
 String entered_password = "";
@@ -23,13 +26,17 @@ void handle_settings_input()
     else if (key == '5')
     {
         entered_password = big_keyboard_main();
-        Serial.println(entered_password);
+
         fill_screen_black();
         display_simple_text("Trying to connect to wifi");
         // TODO: Wont work cause selected_wifi
         // TODO: has signal strength in it
 
-        connect_to_wifi(selected_wifi, entered_password);
+        bool connection_successful = connect_to_wifi(selected_wifi, entered_password);
+        if (connection_successful)
+        {
+            append_wifi(selected_wifi, entered_password);
+        }
     }
     else if (key == '*')
         return_flag = true;
