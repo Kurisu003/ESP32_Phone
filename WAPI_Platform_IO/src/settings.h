@@ -2,64 +2,67 @@
 #define SETTINGS_H
 
 #include "input.h"
+#include "display.h"
 #include "settings_wifi.h"
 
 #define WIFI "Wifi"
 #define BLUETOOTH "Bluetooth"
 
-String availible_settings[] = {WIFI, BLUETOOTH};
-int num_settings = sizeof(availible_settings) / sizeof(availible_settings[0]);
+#define SETTING_SCROLL_INCREMENT 2
 
-int selected_setting = 0;
-int prev_selected_setting = -1;
-bool settings_return = false;
+String availible_settings = String(WIFI) + "\n" + String(BLUETOOTH);
+
+int setting_scroll_height = 0;
+int prev_setting_scroll_height = 0;
+String selected_setting = "";
+bool settings_return_flag = false;
 
 //! Private
 void launch_setting()
 {
-    String current_setting = availible_settings[selected_setting];
 
-    if (current_setting == WIFI)
+    if (selected_setting == WIFI)
     {
 
         settings_wifi_main();
         // Reset prev to update display when returning
-        prev_selected_setting = -1;
+        prev_setting_scroll_height = -1;
     }
-    else if (current_setting == BLUETOOTH)
+    else if (selected_setting == BLUETOOTH)
     {
 
         // TODO:
 
         // Reset prev to update display when returning
-        prev_selected_setting = -1;
+        prev_setting_scroll_height = -1;
     }
 }
 
 //! Private
 void handle_settings_input()
 {
-    char c = keypad_get_key();
-    if (c == '\0')
+    char key = keypad_get_key();
+    if (key == '\0')
         return;
-    if (c == '8')
-        selected_setting = (selected_setting + 1) % num_settings;
-    if (c == '2')
-        selected_setting--;
 
-    if (c == '5')
+    if (key == '2')
+        setting_scroll_height -= SETTING_SCROLL_INCREMENT;
+    else if (key == '8')
+        setting_scroll_height += SETTING_SCROLL_INCREMENT;
+
+    else if (key == '5')
         launch_setting();
 
-    if (selected_setting < 0)
-        selected_setting = num_settings - 1;
+    else if (key == '*')
+        settings_return_flag = true;
 }
 
 //! Public
 void settings_main()
 {
-    selected_setting = 0;
-    prev_selected_setting = -1;
-    settings_return = false;
+    setting_scroll_height = 0;
+    selected_setting = "";
+    settings_return_flag = false;
 
     while (true)
     {
@@ -68,12 +71,13 @@ void settings_main()
 
         // stuff that happens always
 
-        if (settings_return)
+        if (settings_return_flag)
             return;
 
-        if (prev_selected_setting == selected_setting)
+        if (prev_setting_scroll_height == setting_scroll_height)
             continue;
 
+        selected_setting = scrollable_text_box(0, 0, 128, 160, availible_settings, setting_scroll_height, setting_scroll_height);
         // update display (runs if stuff changes)
     }
 }
