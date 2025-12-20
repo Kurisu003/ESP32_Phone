@@ -1,70 +1,80 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
-#include "variables.h"
-#include "wifi_self.h"
+
 #include "input.h"
-#include "big_keyboard.h"
-#include "storage.h"
+#include "settings_wifi.h"
 
-#include <vector>
+#define WIFI "Wifi"
+#define BLUETOOTH "Bluetooth"
 
-int scroll_height = 0;
-String entered_password = "";
-String selected_wifi = "";
-bool return_flag = false;
+String availible_settings[] = {WIFI, BLUETOOTH};
+int num_settings = sizeof(availible_settings) / sizeof(availible_settings[0]);
+
+int selected_setting = 0;
+int prev_selected_setting = -1;
+bool settings_return = false;
+
+//! Private
+void launch_setting()
+{
+    String current_setting = availible_settings[selected_setting];
+
+    if (current_setting == WIFI)
+    {
+
+        settings_wifi_main();
+        // Reset prev to update display when returning
+        prev_selected_setting = -1;
+    }
+    else if (current_setting == BLUETOOTH)
+    {
+
+        // TODO:
+
+        // Reset prev to update display when returning
+        prev_selected_setting = -1;
+    }
+}
 
 //! Private
 void handle_settings_input()
 {
-    char key = keypad_get_key();
-    if (key == '\0')
+    char c = keypad_get_key();
+    if (c == '\0')
         return;
+    if (c == '8')
+        selected_setting = (selected_setting + 1) % num_settings;
+    if (c == '2')
+        selected_setting--;
 
-    if (key == '2')
-        scroll_height -= 3;
-    else if (key == '8')
-        scroll_height += 3;
-    else if (key == '5')
-    {
-        entered_password = big_keyboard_main();
+    if (c == '5')
+        launch_setting();
 
-        fill_screen_black();
-        display_simple_text("Trying to connect to wifi");
-        // TODO: Wont work cause selected_wifi
-        // TODO: has signal strength in it
-
-        bool connection_successful = connect_to_wifi(selected_wifi, entered_password);
-        if (connection_successful)
-        {
-            append_wifi(selected_wifi, entered_password);
-        }
-    }
-    else if (key == '*')
-        return_flag = true;
+    if (selected_setting < 0)
+        selected_setting = num_settings - 1;
 }
 
 //! Public
 void settings_main()
 {
-    scroll_height = 0;
-    entered_password = "";
-    selected_wifi = "";
-    return_flag = false;
-    fill_screen_black();
-    display_simple_text("Searching wifi...");
-    String wifi_networks = list_wifi_networks();
+    selected_setting = 0;
+    prev_selected_setting = -1;
+    settings_return = false;
 
-    fill_screen_black();
     while (true)
     {
+        delay(50);
         handle_settings_input();
-        if (return_flag)
-        {
-            set_tft_rotation(2);
+
+        // stuff that happens always
+
+        if (settings_return)
             return;
-        }
-        selected_wifi = scrollable_text_box(0, 0, 128, 80, wifi_networks, scroll_height, scroll_height);
-        delay(100);
+
+        if (prev_selected_setting == selected_setting)
+            continue;
+
+        // update display (runs if stuff changes)
     }
 }
 

@@ -38,6 +38,18 @@ TFT_eSPI tft = TFT_eSPI(); // Invoke custom library
 // tft.drawRoundRect(x, y, w, h, 5, color);
 //? ----- Begin UTILS -----
 //! Private
+static inline void rgb565_to_rgb888(
+    uint16_t c,
+    uint8_t *r,
+    uint8_t *g,
+    uint8_t *b)
+{
+    *r = ((c >> 11) & 0x1F) << 3;
+    *g = ((c >> 5) & 0x3F) << 2;
+    *b = (c & 0x1F) << 3;
+}
+
+//! Private
 void decode_rle_32x32(
     const RLE_Pixel *data,
     uint32_t data_len,
@@ -69,15 +81,10 @@ void decode_rle_32x32(
 }
 
 //! Private
-static inline void rgb565_to_rgb888(
-    uint16_t c,
-    uint8_t *r,
-    uint8_t *g,
-    uint8_t *b)
+void set_pixel_color(int x, int y, int r, int g, int b)
 {
-    *r = ((c >> 11) & 0x1F) << 3;
-    *g = ((c >> 5) & 0x3F) << 2;
-    *b = (c & 0x1F) << 3;
+    uint16_t color = tft.color565(r, g, b);
+    tft.drawPixel(x, y, color);
 }
 
 //! Public
@@ -97,13 +104,6 @@ void draw_image_at_position(int x_offset, int y_offset, RLE_Pixel *image_data, i
         }
         Serial.println();
     }
-}
-
-//! Private
-void set_pixel_color(int x, int y, int r, int g, int b)
-{
-    uint16_t color = tft.color565(r, g, b);
-    tft.drawPixel(x, y, color);
 }
 
 //! Public

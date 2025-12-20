@@ -1,0 +1,42 @@
+#ifndef NAME_H
+#define NAME_H
+
+#include "input.h"
+
+TYPE THING_THAT_CHANGES = ;
+TYPE prev_THING_THAT_CHANGES = ;
+bool NAME_return = false;
+
+//! Private
+void handle_NAME_input()
+{
+    char c = keypad_get_key();
+    if (c == '\0')
+        return;
+}
+
+//! Public
+void NAME_main()
+{
+    THING_THAT_CHANGES = ;
+    prev_THING_THAT_CHANGES = ;
+    NAME_return = false;
+
+    while (true)
+    {
+        delay(50);
+        handle_NAME_input();
+
+        // stuff that happens always
+
+        if (NAME_return)
+            return;
+
+        if (prev_THING_THAT_CHANGES == THING_THAT_CHANGES)
+            continue
+
+        // update display (runs if stuff changes)
+    }
+}
+
+#endif

@@ -2,26 +2,7 @@
 #define WIFI_H
 #include <display.h>
 #include <WiFi.cpp>
-
-void auto_connect_to_wifi()
-{
-    std::vector<std::pair<String, String>> wifiList = read_all_wifi();
-
-    for (auto &entry : wifiList)
-    {
-        Serial.println("----");
-        Serial.print("SSID: ");
-        Serial.println(entry.first);
-        Serial.print("Password: ");
-        Serial.println(entry.second);
-        Serial.println("----");
-        bool connection_successful = connect_to_wifi(entry.first, entry.second);
-        if (connection_successful)
-        {
-            return;
-        }
-    }
-}
+#include "storage.h"
 
 //! Public
 String list_wifi_networks()
@@ -78,6 +59,27 @@ bool connect_to_wifi(const String &ssid, const String &password)
     display_simple_text("WiFi Connected :)");
     Serial.println("WiFi connected successfully!");
     return true; // connection succeeded
+}
+
+//! Public
+void auto_connect_to_wifi()
+{
+    std::vector<std::pair<String, String>> wifiList = read_all_wifi();
+
+    for (auto &entry : wifiList)
+    {
+        Serial.println("----");
+        Serial.print("SSID: ");
+        Serial.println(entry.first);
+        Serial.print("Password: ");
+        Serial.println(entry.second);
+        Serial.println("----");
+        bool connection_successful = connect_to_wifi(entry.first, entry.second);
+        if (connection_successful)
+        {
+            return;
+        }
+    }
 }
 
 #endif
