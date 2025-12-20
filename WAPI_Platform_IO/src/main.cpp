@@ -14,6 +14,9 @@ void setup(void)
   keypad_init();
   storage_init();
 
+  // Clear wifi:
+  write_to_file("/wifi.txt", "");
+
   append_wifi("Wi-Find You Cute 2.4 GHz\nMinecraft123!");
   append_wifi("UwU\n121345678");
 

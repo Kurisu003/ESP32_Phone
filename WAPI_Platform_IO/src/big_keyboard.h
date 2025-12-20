@@ -117,7 +117,7 @@ String big_keyboard_main()
     prev_x = -1;
     prev_y = -1;
     selected_keyboard = 0;
-    text = "Minecraft123!";
+    text = "";
     prev_text = "0";
     return_text = false;
 

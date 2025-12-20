@@ -45,7 +45,7 @@ String wifi_http_get(const char *url)
     // client.setCACert(root_ca);
     HTTPClient https;
 
-    Serial.printf("GET %s ... ", url);
+    display_simple_text("Sending GET over WIFI: " + String(url));
     if (https.begin(client, url))
     {
         int httpCode = https.GET();
@@ -60,7 +60,8 @@ String wifi_http_get(const char *url)
         }
         else
         {
-            Serial.printf("FAILED: %s\n", https.errorToString(httpCode).c_str());
+            // I know this double conversion is unneccesary, leave me alone
+            display_simple_text("FAILED: " + String(https.errorToString(httpCode).c_str()));
         }
         https.end();
     }
@@ -74,6 +75,8 @@ String wifi_http_get(const char *url)
 //! Private
 String wifi_http_post(String url, String payload)
 {
+    display_simple_text("Sending POST over Wifi: " + url);
+
     WiFiClientSecure client;
     client.setInsecure();
     // client.setCACert(root_ca);
