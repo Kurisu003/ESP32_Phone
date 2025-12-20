@@ -14,14 +14,14 @@ void setup(void)
   keypad_init();
   storage_init();
 
-  // app_selection_main();
-  // TODO: Look through all saved passwords and try to connect
-  // TODO: Use wifi for https if availible
   append_wifi("Wi-Find You Cute 2.4 GHz\nMinecraft123!");
+  append_wifi("UwU\n121345678");
 
-  Serial.println("Stored WiFi credentials:");
+  bool wifi_connected = auto_connect_to_wifi();
 
-  
+  Serial.println(wifi_connected);
+  // Serial.println("Stored WiFi credentials:");
+  app_selection_main();
 }
 
 void loop()

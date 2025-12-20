@@ -38,7 +38,7 @@ void handle_settings_wifi_input()
         bool connection_successful = connect_to_wifi(selected_wifi, entered_password);
         if (connection_successful)
         {
-            append_wifi(selected_wifi, entered_password);
+            append_wifi(selected_wifi + "\n" + entered_password);
         }
     }
     else if (key == '*')
@@ -70,7 +70,7 @@ void settings_wifi_main()
         if (prev_wifi_setting_scroll_height == wifi_setting_scroll_height)
             continue;
 
-            selected_wifi = scrollable_text_box(0, 0, 128, 80, wifi_networks, wifi_setting_scroll_height, wifi_setting_scroll_height);
+        selected_wifi = scrollable_text_box(0, 0, 128, 80, wifi_networks, wifi_setting_scroll_height, wifi_setting_scroll_height);
         delay(100);
     }
 }

@@ -3,6 +3,7 @@
 #include <display.h>
 #include <WiFi.cpp>
 #include "storage.h"
+#include "variables.h"
 
 //! Public
 String list_wifi_networks()
@@ -45,10 +46,8 @@ bool connect_to_wifi(const String &ssid, const String &password)
     {
         display_simple_text("Connecting to WiFi...");
 
-        // Timeout after 10 seconds
-        if (millis() - startTime >= 10000)
+        if (millis() - startTime >= WIFI_CONNECTION_TIMEOUT)
         {
-            display_simple_text("WiFi connection timed out!");
             Serial.println("WiFi connection failed.");
             return false; // connection failed
         }
@@ -62,7 +61,7 @@ bool connect_to_wifi(const String &ssid, const String &password)
 }
 
 //! Public
-void auto_connect_to_wifi()
+bool auto_connect_to_wifi()
 {
     std::vector<std::pair<String, String>> wifiList = read_all_wifi();
 
@@ -77,9 +76,10 @@ void auto_connect_to_wifi()
         bool connection_successful = connect_to_wifi(entry.first, entry.second);
         if (connection_successful)
         {
-            return;
+            return true;
         }
     }
+    return false;
 }
 
 #endif

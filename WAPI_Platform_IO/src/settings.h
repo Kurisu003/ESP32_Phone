@@ -8,12 +8,12 @@
 #define WIFI "Wifi"
 #define BLUETOOTH "Bluetooth"
 
-#define SETTING_SCROLL_INCREMENT 2
+#define SETTING_SCROLL_INCREMENT 1
 
 String availible_settings = String(WIFI) + "\n" + String(BLUETOOTH);
 
 int setting_scroll_height = 0;
-int prev_setting_scroll_height = 0;
+int prev_setting_scroll_height = -1;
 String selected_setting = "";
 bool settings_return_flag = false;
 
@@ -61,6 +61,8 @@ void handle_settings_input()
 void settings_main()
 {
     setting_scroll_height = 0;
+    prev_setting_scroll_height = -1;
+
     selected_setting = "";
     settings_return_flag = false;
 
@@ -69,8 +71,6 @@ void settings_main()
         delay(50);
         handle_settings_input();
 
-        // stuff that happens always
-
         if (settings_return_flag)
             return;
 
@@ -78,7 +78,7 @@ void settings_main()
             continue;
 
         selected_setting = scrollable_text_box(0, 0, 128, 160, availible_settings, setting_scroll_height, setting_scroll_height);
-        // update display (runs if stuff changes)
+        prev_setting_scroll_height = setting_scroll_height;
     }
 }
 
