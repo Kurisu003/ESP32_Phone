@@ -18,6 +18,7 @@ int err;
 // if calcultor should quit
 bool exit_calc = false;
 
+//! Private
 double eval_expression()
 {
     const char *expr_cstr = expr.c_str();
@@ -33,6 +34,7 @@ double eval_expression()
     return 0.0;
 }
 
+//! Private
 void handle_calculator_selection_input()
 {
     char key = keypad_get_key();
@@ -81,6 +83,7 @@ void handle_calculator_selection_input()
     }
 }
 
+//! Public
 void calculator_main()
 {
     int previous_x = -1;

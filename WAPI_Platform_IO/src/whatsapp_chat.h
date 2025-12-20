@@ -23,6 +23,7 @@ unsigned int refetch_message_counter = 0;
 #include <vector>
 #include <Arduino.h>
 
+//! Private
 std::vector<String> get_line_segmented_by_amount(const String &text, int amount)
 {
     std::vector<String> segments;
@@ -68,6 +69,7 @@ std::vector<String> get_line_segmented_by_amount(const String &text, int amount)
     return segments;
 }
 
+//! Private
 void init_chat_and_calc_scroll_pos(const char *contact)
 {
     String response = get_whatsapp_info("messages_from_contact/" + String(contact));
@@ -127,12 +129,14 @@ void init_chat_and_calc_scroll_pos(const char *contact)
     scroll_pos = max(0, (int)all_lines.size() - visible_lines);
 }
 
+//! Private
 void fresh_chat_init(const char *contact)
 {
     init_chat_and_calc_scroll_pos(contact);
     render_whatsapp_chat_screen(scroll_pos, all_lines);
 }
 
+//! Public
 void whatsapp_chat_main(const char *contact)
 {
     bool type_mode = false;

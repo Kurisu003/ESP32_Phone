@@ -40,6 +40,7 @@ static const char KEYMAP[4][3] = {
 Initialization
 ========================= */
 
+//! Public
 void keypad_init()
 {
   /* Columns: outputs, idle HIGH */
@@ -60,6 +61,7 @@ void keypad_init()
 Key scan
 ========================= */
 
+//! Public
 char keypad_get_key()
 {
   static uint32_t lastScanTime = 0;

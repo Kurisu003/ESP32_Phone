@@ -36,180 +36,7 @@ TFT_eSPI tft = TFT_eSPI(); // Invoke custom library
 // tft.fillTriangle(0, 0, 100, 0, 50, 50, TFT_BLUE);
 
 // tft.drawRoundRect(x, y, w, h, 5, color);
-//! Public
-void screen_init()
-{
-    if (!display_initialized)
-    {
-        tft.setRotation(2);
-
-        tft.init(); // initialize a ST7735S chip
-        tft.invertDisplay(0);
-
-        tft.fillScreen(TFT_BLACK);
-        display_initialized = true;
-    }
-}
-
-//! Public
-void drawApp(String name, int x, int index, bool is_selected)
-{
-    int y = (index * 20) + 5;
-    if (is_selected)
-    {
-        tft.drawRect(x, y, 70, 18, TFT_BLUE);
-    }
-    else
-    {
-        tft.drawRect(x, y, 70, 18, TFT_WHITE);
-    }
-
-    tft.setCursor(x + 5, y + 5);
-    tft.print(name);
-}
-
-//! Public
-void fill_screen_black()
-{
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_WHITE);
-    tft.setTextSize(1);
-    tft.setCursor(0, 0);
-}
-
-//! Private
-void display_contact(int x, int index, const char *contact, int selected_contact, int page, bool is_unread)
-{
-    // index used so the display draws correctly
-    int index_for_draw = index - page * 8;
-    int y = (index_for_draw * 20);
-    if (index == selected_contact)
-    {
-        tft.drawRect(x, y, 70, 18, TFT_BLUE);
-    }
-    else
-    {
-        tft.drawRect(x, y, 70, 18, TFT_WHITE);
-    }
-    if (is_unread)
-    {
-        tft.fillCircle(x + 70, y, 3, TFT_BLUE);
-    }
-
-    char buffer[11]; // 10 chars + null terminator
-    strncpy(buffer, contact, 10);
-    buffer[10] = '\0'; // Force null-terminate
-
-    tft.setCursor(x + 5, y + 5);
-    tft.print(buffer);
-}
-
-//! Public
-void display_simple_text(String text)
-{
-    fill_screen_black();
-    tft.print(text);
-}
-
-//! Public
-void draw_contacts(std::vector<String> contacts, std::vector<String> unread_contacts, int selected_contact)
-{
-    fill_screen_black();
-
-    if (contacts.empty())
-    {
-        tft.print("No contacts found");
-        return;
-    }
-
-    // Displays 8 contacts per page
-    int page = selected_contact / 8;
-    for (size_t i = page * 8; i < min(contacts.size(), (size_t)8 + page * 8); i++)
-    {
-        bool is_unread = std::find(unread_contacts.begin(), unread_contacts.end(), contacts[i]) != unread_contacts.end();
-        display_contact(5, i, contacts[i].c_str(), selected_contact, page, is_unread);
-        // display_contact(5, i, contacts[i].c_str(), selected_contact, page);
-    }
-
-    tft.setCursor(100, 5);
-    tft.print(page + 1);
-    tft.print("/");
-    tft.print(int(ceil(contacts.size() / 8.0)));
-}
-
-//! Public
-void render_whatsapp_chat_screen(int scroll_pos, std::vector<ChatLine> all_lines)
-{
-
-    fill_screen_black();
-    int y = 0;
-    const int line_h = 10;
-    int max_lines = (tft.height() - 30) / line_h;
-
-    for (int i = 0; i < max_lines && scroll_pos + i < all_lines.size(); i++)
-    {
-        const auto &line = all_lines[scroll_pos + i];
-        tft.setTextColor(line.color);
-        tft.setCursor(0, y);
-        tft.print(line.text);
-        y += line_h;
-    }
-}
-
-//! Public
-void render_whatsapp_type_mode_rect(bool type_mode)
-{
-    tft.fillRect(0, 130, 128, 30, TFT_BLACK);
-    if (type_mode)
-        tft.drawRect(0, 130, 128, 30, TFT_BLUE);
-    else
-        tft.drawRect(0, 130, 128, 30, TFT_WHITE);
-}
-
-//! Public
-int get_tft_height()
-{
-    return tft.height();
-}
-
-//! Public
-int get_tft_width()
-{
-    return tft.width();
-}
-
-//! Public
-void set_tft_rotation(int rotation)
-{
-    tft.setRotation(rotation);
-}
-
-//! Public
-void render_whatsapp_typed_text(String current_text)
-{
-    tft.setCursor(2, 132);
-    tft.print(current_text);
-}
-
-//! Private
-void set_pixel_color(int x, int y, int r, int g, int b)
-{
-    uint16_t color = tft.color565(r, g, b);
-    tft.drawPixel(x, y, color);
-}
-
-//! Private
-static inline void rgb565_to_rgb888(
-    uint16_t c,
-    uint8_t *r,
-    uint8_t *g,
-    uint8_t *b)
-{
-    *r = ((c >> 11) & 0x1F) << 3;
-    *g = ((c >> 5) & 0x3F) << 2;
-    *b = (c & 0x1F) << 3;
-}
-
+//? ----- Begin UTILS -----
 //! Private
 void decode_rle_32x32(
     const RLE_Pixel *data,
@@ -241,6 +68,18 @@ void decode_rle_32x32(
     }
 }
 
+//! Private
+static inline void rgb565_to_rgb888(
+    uint16_t c,
+    uint8_t *r,
+    uint8_t *g,
+    uint8_t *b)
+{
+    *r = ((c >> 11) & 0x1F) << 3;
+    *g = ((c >> 5) & 0x3F) << 2;
+    *b = (c & 0x1F) << 3;
+}
+
 //! Public
 void draw_image_at_position(int x_offset, int y_offset, RLE_Pixel *image_data, int image_data_len)
 {
@@ -260,41 +99,60 @@ void draw_image_at_position(int x_offset, int y_offset, RLE_Pixel *image_data, i
     }
 }
 
-//! Public
-void draw_apps(RLE_Pixel **app_images, int *app_images_lengths, int num_app_images)
+//! Private
+void set_pixel_color(int x, int y, int r, int g, int b)
 {
-    fill_screen_black();
-    int x = 0;                    // starting x position
-    int y = 0;                    // starting y position
-    const int spacing_x = 48;     // horizontal spacing between images
-    const int spacing_y = 42;     // vertical spacing when wrapping to next row
-    const int images_per_row = 3; // number of images per row
+    uint16_t color = tft.color565(r, g, b);
+    tft.drawPixel(x, y, color);
+}
 
-    for (int i = 0; i < num_app_images; i++)
+//! Public
+void screen_init()
+{
+    if (!display_initialized)
     {
-        RLE_Pixel *current_image = app_images[i];
-        int length = app_images_lengths[i];
+        tft.setRotation(2);
 
-        // Draw the image at the current position
-        draw_image_at_position(x, y, current_image, length);
+        tft.init(); // initialize a ST7735S chip
+        tft.invertDisplay(0);
 
-        // Move to the next horizontal position
-        x += spacing_x;
-
-        // After every 3 images, move to next row
-        if ((i + 1) % images_per_row == 0)
-        {
-            x = 0;          // reset x to start
-            y += spacing_y; // move down
-        }
+        tft.fillScreen(TFT_BLACK);
+        display_initialized = true;
     }
 }
 
-void draw_selected_frame(int selected)
+//! Public
+void fill_screen_black()
 {
-    int x_index = selected % 3;
-    int y_index = selected / 3;
-    tft.drawRect(x_index * 48, y_index * 42, 32, 32, TFT_BLUE);
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_WHITE);
+    tft.setTextSize(1);
+    tft.setCursor(0, 0);
+}
+
+//! Public
+void display_simple_text(String text)
+{
+    fill_screen_black();
+    tft.print(text);
+}
+
+//! Public
+int get_tft_height()
+{
+    return tft.height();
+}
+
+//! Public
+int get_tft_width()
+{
+    return tft.width();
+}
+
+//! Public
+void set_tft_rotation(int rotation)
+{
+    tft.setRotation(rotation);
 }
 
 //! Public
@@ -325,77 +183,7 @@ void draw_rect_matrix(
     }
 }
 
-//! Private
-void draw_orange_square_at_index(int x_index, int y_index)
-{
-    int x = calc_matrix_x_offset + (calc_matrix_x_size + calc_matrix_x_spacing) * x_index;
-    int y = calc_matrix_y_offset + (calc_matrix_y_size + calc_matrix_y_spacing) * y_index;
-    // B G R NOT R G B
-    tft.fillRect(x, y, calc_matrix_x_size - 1, calc_matrix_y_size - 1, tft.color565(0, 165, 255));
-}
-
-//! Private
-void draw_calculator_interface()
-{
-    fill_screen_black();
-
-    draw_orange_square_at_index(3, 0);
-    draw_orange_square_at_index(3, 1);
-    draw_orange_square_at_index(3, 2);
-    draw_orange_square_at_index(3, 3);
-    draw_orange_square_at_index(3, 2);
-
-    draw_rect_matrix(
-        calc_matrix_x_offset,
-        calc_matrix_y_offset,
-        calc_matrix_x_amount,
-        calc_matrix_y_amount,
-        calc_matrix_x_size,
-        calc_matrix_y_size,
-        calc_matrix_x_spacing,
-        calc_matrix_y_spacing);
-
-    tft.setTextSize(2);
-
-    const int base_x = 10;
-    const int base_y = 55;
-    const int step_x = calc_matrix_x_size + calc_matrix_x_spacing;
-    const int step_y = calc_matrix_y_size + calc_matrix_y_spacing;
-
-    for (int y = 0; y < 4; y++)
-    {
-        for (int x = 0; x < 4; x++)
-        {
-            tft.setCursor(
-                base_x + x * step_x,
-                base_y + y * step_y);
-
-            tft.print(calculator_keys[y][x]);
-        }
-    }
-}
-
-void draw_calculator_expression(String expr)
-{
-    tft.setTextSize(1);
-    tft.setCursor(0, 0);
-    tft.print(expr);
-}
-
-void draw_calculator_result(String res)
-{
-    tft.setTextSize(1);
-    tft.setCursor(0, 20);
-    tft.print(res);
-}
-
-void draw_selected_calc_square(int selected_x, int selected_y)
-{
-    int y = selected_y * (calc_matrix_y_size + calc_matrix_y_spacing) + calc_matrix_y_offset;
-    int x = selected_x * (calc_matrix_x_size + calc_matrix_x_spacing) + calc_matrix_x_offset;
-    tft.drawRect(x, y, calc_matrix_x_size, calc_matrix_y_size, TFT_BLUE);
-}
-
+//! Public
 String scrollable_text_box(int x, int y, int width, int height, String text, int scrollPos, int selected_line)
 {
     const int lineHeight = 10; // adjust to your font
@@ -464,6 +252,222 @@ String scrollable_text_box(int x, int y, int width, int height, String text, int
         return "";
 }
 
+//? ----- End UTILS -----
+
+//? ----- Begin App rendering -----
+
+//! Public
+void draw_apps(RLE_Pixel **app_images, int *app_images_lengths, int num_app_images)
+{
+    fill_screen_black();
+    int x = 0;                    // starting x position
+    int y = 0;                    // starting y position
+    const int spacing_x = 48;     // horizontal spacing between images
+    const int spacing_y = 42;     // vertical spacing when wrapping to next row
+    const int images_per_row = 3; // number of images per row
+
+    for (int i = 0; i < num_app_images; i++)
+    {
+        RLE_Pixel *current_image = app_images[i];
+        int length = app_images_lengths[i];
+
+        // Draw the image at the current position
+        draw_image_at_position(x, y, current_image, length);
+
+        // Move to the next horizontal position
+        x += spacing_x;
+
+        // After every 3 images, move to next row
+        if ((i + 1) % images_per_row == 0)
+        {
+            x = 0;          // reset x to start
+            y += spacing_y; // move down
+        }
+    }
+}
+
+//! Public
+void draw_selected_app_frame(int selected)
+{
+    int x_index = selected % 3;
+    int y_index = selected / 3;
+    tft.drawRect(x_index * 48, y_index * 42, 32, 32, TFT_BLUE);
+}
+
+//? ----- End App rendering -----
+
+//? ----- Begin Whatsapp -----
+//! Private
+void display_contact(int x, int index, const char *contact, int selected_contact, int page, bool is_unread)
+{
+    // index used so the display draws correctly
+    int index_for_draw = index - page * 8;
+    int y = (index_for_draw * 20);
+    if (index == selected_contact)
+    {
+        tft.drawRect(x, y, 70, 18, TFT_BLUE);
+    }
+    else
+    {
+        tft.drawRect(x, y, 70, 18, TFT_WHITE);
+    }
+    if (is_unread)
+    {
+        tft.fillCircle(x + 70, y, 3, TFT_BLUE);
+    }
+
+    char buffer[11]; // 10 chars + null terminator
+    strncpy(buffer, contact, 10);
+    buffer[10] = '\0'; // Force null-terminate
+
+    tft.setCursor(x + 5, y + 5);
+    tft.print(buffer);
+}
+
+//! Public
+void draw_contacts(std::vector<String> contacts, std::vector<String> unread_contacts, int selected_contact)
+{
+    fill_screen_black();
+
+    if (contacts.empty())
+    {
+        tft.print("No contacts found");
+        return;
+    }
+
+    // Displays 8 contacts per page
+    int page = selected_contact / 8;
+    for (size_t i = page * 8; i < min(contacts.size(), (size_t)8 + page * 8); i++)
+    {
+        bool is_unread = std::find(unread_contacts.begin(), unread_contacts.end(), contacts[i]) != unread_contacts.end();
+        display_contact(5, i, contacts[i].c_str(), selected_contact, page, is_unread);
+        // display_contact(5, i, contacts[i].c_str(), selected_contact, page);
+    }
+
+    tft.setCursor(100, 5);
+    tft.print(page + 1);
+    tft.print("/");
+    tft.print(int(ceil(contacts.size() / 8.0)));
+}
+
+//! Public
+void render_whatsapp_chat_screen(int scroll_pos, std::vector<ChatLine> all_lines)
+{
+
+    fill_screen_black();
+    int y = 0;
+    const int line_h = 10;
+    int max_lines = (tft.height() - 30) / line_h;
+
+    for (int i = 0; i < max_lines && scroll_pos + i < all_lines.size(); i++)
+    {
+        const auto &line = all_lines[scroll_pos + i];
+        tft.setTextColor(line.color);
+        tft.setCursor(0, y);
+        tft.print(line.text);
+        y += line_h;
+    }
+}
+
+//! Public
+void render_whatsapp_type_mode_rect(bool type_mode)
+{
+    tft.fillRect(0, 130, 128, 30, TFT_BLACK);
+    if (type_mode)
+        tft.drawRect(0, 130, 128, 30, TFT_BLUE);
+    else
+        tft.drawRect(0, 130, 128, 30, TFT_WHITE);
+}
+
+//! Public
+void render_whatsapp_typed_text(String current_text)
+{
+    tft.setCursor(2, 132);
+    tft.print(current_text);
+}
+
+//? ----- End Whatsapp -----
+
+//? ----- Begin Calculator -----
+
+//! Private
+void draw_orange_calc_square_at_index(int x_index, int y_index)
+{
+    int x = calc_matrix_x_offset + (calc_matrix_x_size + calc_matrix_x_spacing) * x_index;
+    int y = calc_matrix_y_offset + (calc_matrix_y_size + calc_matrix_y_spacing) * y_index;
+    // B G R NOT R G B
+    tft.fillRect(x, y, calc_matrix_x_size - 1, calc_matrix_y_size - 1, tft.color565(0, 165, 255));
+}
+
+//! Public
+void draw_calculator_interface()
+{
+    fill_screen_black();
+
+    draw_orange_calc_square_at_index(3, 0);
+    draw_orange_calc_square_at_index(3, 1);
+    draw_orange_calc_square_at_index(3, 2);
+    draw_orange_calc_square_at_index(3, 3);
+    draw_orange_calc_square_at_index(3, 2);
+
+    draw_rect_matrix(
+        calc_matrix_x_offset,
+        calc_matrix_y_offset,
+        calc_matrix_x_amount,
+        calc_matrix_y_amount,
+        calc_matrix_x_size,
+        calc_matrix_y_size,
+        calc_matrix_x_spacing,
+        calc_matrix_y_spacing);
+
+    tft.setTextSize(2);
+
+    const int base_x = 10;
+    const int base_y = 55;
+    const int step_x = calc_matrix_x_size + calc_matrix_x_spacing;
+    const int step_y = calc_matrix_y_size + calc_matrix_y_spacing;
+
+    for (int y = 0; y < 4; y++)
+    {
+        for (int x = 0; x < 4; x++)
+        {
+            tft.setCursor(
+                base_x + x * step_x,
+                base_y + y * step_y);
+
+            tft.print(calculator_keys[y][x]);
+        }
+    }
+}
+
+//! Public
+void draw_calculator_expression(String expr)
+{
+    tft.setTextSize(1);
+    tft.setCursor(0, 0);
+    tft.print(expr);
+}
+
+//! Public
+void draw_calculator_result(String res)
+{
+    tft.setTextSize(1);
+    tft.setCursor(0, 20);
+    tft.print(res);
+}
+
+//! Public
+void draw_selected_calc_square(int selected_x, int selected_y)
+{
+    int y = selected_y * (calc_matrix_y_size + calc_matrix_y_spacing) + calc_matrix_y_offset;
+    int x = selected_x * (calc_matrix_x_size + calc_matrix_x_spacing) + calc_matrix_x_offset;
+    tft.drawRect(x, y, calc_matrix_x_size, calc_matrix_y_size, TFT_BLUE);
+}
+
+//? ----- End Calculator -----
+
+//? ----- Begin Keyboard -----
+//! Public
 void draw_keyboard(int keyboard)
 {
     tft.setTextSize(1);
@@ -491,12 +495,14 @@ void draw_keyboard(int keyboard)
     }
 }
 
+//! Public
 void draw_keyboard_text(String text)
 {
     tft.setCursor(5, 5);
     tft.print(text);
 }
 
+//! Public
 void draw_keyboard_selected(int selected_x, int selected_y)
 {
     int y = selected_y * (keyboard_matrix_y_size + keyboard_matrix_y_spacing) + keyboard_matrix_y_offset;
@@ -504,9 +510,11 @@ void draw_keyboard_selected(int selected_x, int selected_y)
     tft.drawRect(x, y, keyboard_matrix_x_size, keyboard_matrix_y_size, TFT_BLUE);
 }
 
+//! Public
 void blank_keyboard_text_area()
 {
     tft.fillRect(0, 0, 160, 50, TFT_BLACK);
 }
+//? ----- End Keyboard -----
 
 #endif

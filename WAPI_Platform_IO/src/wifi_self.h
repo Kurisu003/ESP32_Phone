@@ -3,6 +3,26 @@
 #include <display.h>
 #include <WiFi.cpp>
 
+void auto_connect_to_wifi()
+{
+    std::vector<std::pair<String, String>> wifiList = read_all_wifi();
+
+    for (auto &entry : wifiList)
+    {
+        Serial.println("----");
+        Serial.print("SSID: ");
+        Serial.println(entry.first);
+        Serial.print("Password: ");
+        Serial.println(entry.second);
+        Serial.println("----");
+        bool connection_successful = connect_to_wifi(entry.first, entry.second);
+        if (connection_successful)
+        {
+            return;
+        }
+    }
+}
+
 //! Public
 String list_wifi_networks()
 {

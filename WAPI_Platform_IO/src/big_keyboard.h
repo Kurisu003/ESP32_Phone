@@ -13,6 +13,7 @@ String text = "";
 String prev_text = "0";
 bool return_text = false;
 
+//! Private
 void press_selected()
 {
     char c = '\0';
@@ -66,6 +67,7 @@ void press_selected()
     }
 }
 
+//! Private
 void handle_big_keyboard_input()
 {
     // get physically pressed button
@@ -104,6 +106,7 @@ void handle_big_keyboard_input()
     keyboard_selected_y %= keyboard_matrix_y_amount;
 }
 
+//! Public
 String big_keyboard_main()
 {
     fill_screen_black();

@@ -36,12 +36,9 @@ xAC3QjXD+RcgN8bHBo9CBj9xM+FAOI9KA8v7vHUsbM+FcWCaE/T43aFWXH9IEOy/
 atLBEGBzCzfY/A==
 -----END CERTIFICATE-----)";
 
-// ---------------------------------------------------------------------------
-// GET request with custom X-API-Key header
-// ---------------------------------------------------------------------------
-String sendHttpsGet_wifi(const char *url)
+//! Private
+String wifi_http_get(const char *url)
 {
-
     String response = "";
     WiFiClientSecure client;
     client.setInsecure();
@@ -74,33 +71,8 @@ String sendHttpsGet_wifi(const char *url)
     return response;
 }
 
-//! Public
-String sendHttpsGet(String url)
-{
-    //! Hardcoded sim for now
-    // if (WiFi.status() != WL_CONNECTED)
-    if (true)
-    {
-        return (send_http_sim_get(url));
-    }
-
-    return (sendHttpsGet_wifi(url.c_str()));
-}
-
-//! Public
-String get_whatsapp_info(String option)
-{
-    String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/" + option;
-    String response = sendHttpsGet(url);
-    Serial.println(response);
-    return response;
-}
-
-// ---------------------------------------------------------------------------
-// POST JSON payload with contact/message and X-API-Key
-// ---------------------------------------------------------------------------
-
-String send_http_post_wifi(String url, String payload)
+//! Private
+String wifi_http_post(String url, String payload)
 {
     WiFiClientSecure client;
     client.setInsecure();
@@ -129,21 +101,37 @@ String send_http_post_wifi(String url, String payload)
     // how to end before returning?
 }
 
+//! Public
+String send_http_get(String url)
+{
+    //! Hardcoded sim for now
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        return (send_http_sim_get(url));
+    }
+
+    return (wifi_http_get(url.c_str()));
+}
+
+//! Public
+String get_whatsapp_info(String option)
+{
+    String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/" + option;
+    String response = send_http_get(url);
+    return response;
+}
+
+//! Public
 String send_message_to_contact(const String &contact, const String &message)
 {
-    Serial.println(contact);
-    Serial.println(message);
-
     String url = "https://" + String(BASE_IP) + ":" + String(BASE_PORT) + "/api/send_message_to_contact";
 
     String payload = "{\"content\":{\"contact\":\"" + contact + "\",\"message\":\"" + message + "\"}}";
 
-    // if (WiFi.status() != WL_CONNECTED)
-    //! Hardcoded to always use sim for now
-    if (true)
+    if (WiFi.status() != WL_CONNECTED)
         return send_http_post_sim(url, payload);
 
-    return send_http_post_wifi(url, payload);
+    return wifi_http_post(url, payload);
 }
 
-#endif // HTTPS_UTILS_H
+#endif

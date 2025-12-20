@@ -6,6 +6,7 @@
 
 #include <vector>
 
+//! Public
 void storage_init()
 {
     if (!SPIFFS.begin(true))
@@ -14,6 +15,7 @@ void storage_init()
     }
 }
 
+//! Public
 // Write a string to a file (overwrite)
 void write_to_file(const String &file_name, const String &text)
 {
@@ -28,6 +30,7 @@ void write_to_file(const String &file_name, const String &text)
     file.close();
 }
 
+//! Public
 // Append a string to a file
 void append_to_file(const String &file_name, const String &text)
 {
@@ -57,6 +60,7 @@ String read_from_file(const String &file_name)
     return result;
 }
 
+//! Public
 void append_wifi(const String &entry, const String &file_name = "/wifi.txt")
 {
     // Split incoming entry into ssid and password
@@ -139,6 +143,7 @@ void append_wifi(const String &entry, const String &file_name = "/wifi.txt")
     file.close();
 }
 
+//! Public
 std::vector<std::pair<String, String>> read_all_wifi(const String &file_name = "/wifi.txt")
 {
     std::vector<std::pair<String, String>> result;

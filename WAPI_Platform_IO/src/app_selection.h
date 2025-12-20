@@ -80,7 +80,7 @@ void app_selection_main()
             continue;
 
         draw_apps(app_images, app_images_lengths, num_app_images);
-        draw_selected_frame(selected_app);
+        draw_selected_app_frame(selected_app);
         previously_selected_app = selected_app;
     }
 }

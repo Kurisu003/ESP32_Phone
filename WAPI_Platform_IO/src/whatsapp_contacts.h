@@ -16,6 +16,7 @@ int selected_contact = 0;
 std::vector<String> contacts;
 std::vector<String> unread_contacts;
 
+//! Private
 void init_contacts()
 {
   display_simple_text("Get request for contacts sent");
@@ -30,6 +31,7 @@ void init_contacts()
   display_simple_text("Contacts Jsoned");
 }
 
+//! Private
 void fetch_and_disp_contacts()
 {
   display_simple_text("Getting contacts...");
@@ -41,6 +43,7 @@ void fetch_and_disp_contacts()
   draw_contacts(contacts, unread_contacts, selected_contact);
 }
 
+//! Public
 void whatsapp_main()
 {
   printf("Whatsapp Main\n");

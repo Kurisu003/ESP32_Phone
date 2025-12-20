@@ -13,6 +13,7 @@ String entered_password = "";
 String selected_wifi = "";
 bool return_flag = false;
 
+//! Private
 void handle_settings_input()
 {
     char key = keypad_get_key();
@@ -42,6 +43,7 @@ void handle_settings_input()
         return_flag = true;
 }
 
+//! Public
 void settings_main()
 {
     scroll_height = 0;
