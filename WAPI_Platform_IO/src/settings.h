@@ -7,10 +7,11 @@
 
 #define WIFI "Wifi"
 #define BLUETOOTH "Bluetooth"
+#define WIFI_AUTO_CONNECT "Wifi auto connect"
 
 #define SETTING_SCROLL_INCREMENT 1
 
-String availible_settings = String(WIFI) + "\n" + String(BLUETOOTH);
+String availible_settings = String(WIFI) + "\n" + String(BLUETOOTH) + "\n" + String(WIFI_AUTO_CONNECT);
 
 int setting_scroll_height = 0;
 int prev_setting_scroll_height = -1;
@@ -35,6 +36,10 @@ void launch_setting()
 
         // Reset prev to update display when returning
         prev_setting_scroll_height = -1;
+    }
+    else if (selected_setting == WIFI_AUTO_CONNECT){
+        bool wifi_connected = auto_connect_to_wifi();
+        
     }
 }
 

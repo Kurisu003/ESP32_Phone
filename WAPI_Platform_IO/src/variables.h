@@ -21,7 +21,7 @@
 #define calc_matrix_x_spacing 8
 #define calc_matrix_y_spacing 3
 
-#define WIFI_CONNECTION_TIMEOUT 15000
+#define WIFI_CONNECTION_TIMEOUT 5000
 
 constexpr const char *BASE_IP = "154.16.36.201";
 constexpr const char *BASE_PORT = "38823";

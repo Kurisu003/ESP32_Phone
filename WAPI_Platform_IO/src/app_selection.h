@@ -23,6 +23,9 @@ int app_images_lengths[] = {
 int num_app_images = sizeof(app_images) / sizeof(app_images[0]);
 
 int selected_app = 0;
+int previously_selected_app = -1;
+bool wifi_status = false;
+bool prev_wifi_status = true;
 
 void start_app()
 {
@@ -30,15 +33,15 @@ void start_app()
     {
     case 0:
         settings_main();
-        selected_app = 0;
+        previously_selected_app = -1;
         break;
     case 1:
         whatsapp_main();
-        selected_app = 0;
+        previously_selected_app = -1;
         break;
     case 2:
         calculator_main();
-        selected_app = 1;
+        previously_selected_app = -1;
         break;
     }
 }
@@ -70,18 +73,22 @@ void handle_app_selection_input()
 
 void app_selection_main()
 {
-    int previously_selected_app = -1;
     while (true)
     {
         delay(20);
+        wifi_status = WiFi.status() == WL_CONNECTED;
+
         handle_app_selection_input();
 
-        if (selected_app == previously_selected_app)
+        if (selected_app == previously_selected_app && wifi_status == prev_wifi_status)
             continue;
 
         draw_apps(app_images, app_images_lengths, num_app_images);
         draw_selected_app_frame(selected_app);
         previously_selected_app = selected_app;
+
+        display_wifi_connection(0, 100, wifi_status);
+        prev_wifi_status = wifi_status;
     }
 }
 

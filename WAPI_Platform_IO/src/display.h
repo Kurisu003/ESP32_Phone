@@ -294,6 +294,13 @@ void draw_selected_app_frame(int selected)
     tft.drawRect(x_index * 48, y_index * 42, 32, 32, TFT_BLUE);
 }
 
+//! Public
+void display_wifi_connection(int x, int y, bool wifi_status)
+{
+    tft.setCursor(x, y);
+    tft.print("Wifi connected: " + String(wifi_status));
+}
+
 //? ----- End App rendering -----
 
 //? ----- Begin Whatsapp -----

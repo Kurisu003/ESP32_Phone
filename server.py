@@ -9,6 +9,53 @@ import unicodedata
 import time
 app = Flask(__name__)
 
+file_path = "./contact_map.txt"
+
+def get_key(key):
+    global file_path
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            for line in file:
+                line = line.strip()
+                if '=' in line:
+                    existing_key, value = line.split('=', 1)
+                    if existing_key == key:
+                        return value
+
+        return None  # Key not found
+
+    except FileNotFoundError:
+        return None
+    except Exception as e:
+        return f"Error: {e}"
+
+def append_key(key, value):
+    global file_path
+    try:
+        existing_keys = set()
+
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                for line in file:
+                    line = line.strip()
+                    if '=' in line:
+                        existing_key = line.split('=', 1)[0]
+                        existing_keys.add(existing_key)
+        except FileNotFoundError:
+            pass  # File does not exist yet
+
+        if key in existing_keys:
+            return f"Key '{key}' already exists. No changes made."
+
+        with open(file_path, 'a', encoding='utf-8') as file:
+            file.write(f"{key}={value}\n")
+
+        return f"Key '{key}' successfully added."
+
+    except Exception as e:
+        return f"Error: {e}"
+
+
 
 def clean_string(s: str) -> str:
     # Step 1: Replace common umlauts
@@ -34,13 +81,16 @@ def clean_string(s: str) -> str:
 def clean_list(strings: list[str]) -> list[str]:
     return [clean_string(s) for s in strings]
 
-
 @app.route('/api/get_contacts', methods=['GET'])
 def get_contacts():
     try:
-
         contacts = whatsapp.list_contacts()
-        return jsonify(clean_list(contacts))
+        clean_list = clean_list(contacts)
+
+        for key, value in zip(clean_list, contacts):
+            append_key(key, value)
+
+        return jsonify(clean_list)
 
 
     except:
@@ -48,8 +98,12 @@ def get_contacts():
 
 @app.route('/api/messages_from_contact/<contact_id>', methods=['GET'])
 def messages_from_contact(contact_id):
+
+    actual_contact = get_key(contact_id) or contact_id
+    print(actual_contact)
+
     try:
-        msgs = whatsapp.get_messages_from_contact(contact_id)
+        msgs = whatsapp.get_messages_from_contact(actual_contact)
 
         # Remove all newlines from message texts
         sanitized_msgs = []
@@ -70,9 +124,7 @@ def messages_from_contact(contact_id):
 @app.route('/api/get_unreads', methods=['GET'])
 def get_unreads():
     try:
-
         has_unread, who = whatsapp.has_unread_notifications()
-        # return jsonify([has_unread, who])
         return jsonify(clean_list(who))
 
 
@@ -84,15 +136,13 @@ def get_unreads():
 def send_message_to_contact():
     try:
         raw = request.data.decode("utf-8")
-        print(raw)
         data = json.loads(raw)
         contact = data["content"]["contact"]
         message = data["content"]["message"]
-        print(data)
-        print(contact)
-        print(message)
 
-        whatsapp.send_message_to_contact(contact,message)
+        actual_contact = get_key(contact)
+
+        whatsapp.send_message_to_contact(actual_contact,message)
         return jsonify({"OK": "OK"}), 201
 
     except:
@@ -106,7 +156,9 @@ def get_pia_port():
     import subprocess
 
     # piactl_path = r"C:\Program Files\Private Internet Access\piactl.exe"
-    piactl_path = "/Applications/Private Internet Access.app/Contents/MacOS/piactl"
+    # piactl_path = "/Applications/Private Internet Access.app/Contents/MacOS/piactl"
+    piactl_path = "/usr/local/bin/piactl"  # Adjust this based on where it's installed
+
 
 
     result = subprocess.run(
@@ -124,6 +176,10 @@ def get_pia_port():
 if __name__ == '__main__':
     # time.sleep(10)
     # whatsapp.send_message_to_contact("Mars","hallo mars dies ist ein test")
+
+    # append_key("Hallo","Welt")
+    # print(get_key("Hallo"))
+
     start_thread()
     context = ('cert.pem', 'key.pem')  # (cert, key)
     port = get_pia_port()

@@ -44,7 +44,7 @@ bool connect_to_wifi(const String &ssid, const String &password)
 
     while (WiFi.status() != WL_CONNECTED)
     {
-        display_simple_text("Connecting to WiFi...");
+        display_simple_text("Connecting to WiFi: " + ssid);
 
         if (millis() - startTime >= WIFI_CONNECTION_TIMEOUT)
         {
@@ -73,6 +73,7 @@ bool auto_connect_to_wifi()
         Serial.print("Password: ");
         Serial.println(entry.second);
         Serial.println("----");
+        display_simple_text("Trying to connect to: " + entry.first);
         bool connection_successful = connect_to_wifi(entry.first, entry.second);
         if (connection_successful)
         {
