@@ -85,12 +85,12 @@ def clean_list(strings: list[str]) -> list[str]:
 def get_contacts():
     try:
         contacts = whatsapp.list_contacts()
-        clean_list = clean_list(contacts)
+        cleaned_contactts = clean_list(contacts)
 
-        for key, value in zip(clean_list, contacts):
+        for key, value in zip(cleaned_contactts, contacts):
             append_key(key, value)
 
-        return jsonify(clean_list)
+        return jsonify(cleaned_contactts)
 
 
     except:
@@ -110,6 +110,12 @@ def messages_from_contact(contact_id):
         for msg in msgs:
             sender, text, flags = msg
             clean_text = text.replace("\r", " ").replace("\n", " ")
+
+            # To overwrite weird symbols
+            # that might be in the senders name
+            if(sender != "You"):
+                sender = contact_id
+
             sanitized_msgs.append([sender, clean_text, flags])
 
         print(f"\nFound {len(sanitized_msgs)} messages:")
@@ -157,7 +163,7 @@ def get_pia_port():
 
     # piactl_path = r"C:\Program Files\Private Internet Access\piactl.exe"
     # piactl_path = "/Applications/Private Internet Access.app/Contents/MacOS/piactl"
-    piactl_path = "/usr/local/bin/piactl"  # Adjust this based on where it's installed
+    piactl_path = "/usr/local/bin/piactl"
 
 
 
@@ -172,19 +178,23 @@ def get_pia_port():
 
     return result.stdout.strip()
 
+def repeat_hit_esc(interval=120):
+    import time
+    while True:
+        time.sleep(interval)
+        whatsapp.hit_esc()
 
 if __name__ == '__main__':
-    # time.sleep(10)
-    # whatsapp.send_message_to_contact("Mars","hallo mars dies ist ein test")
-
-    # append_key("Hallo","Welt")
-    # print(get_key("Hallo"))
-
     start_thread()
+
+    # Start repeating ESC presses every 2 minutes
+    esc_thread = threading.Thread(target=repeat_hit_esc, daemon=True)
+    esc_thread.start()
+
     context = ('cert.pem', 'key.pem')  # (cert, key)
     port = get_pia_port()
     print(port)
-    if(port == "Inactive"):
+    if port == "Inactive":
         print("Turn on VPN")
     else:
         app.run(
@@ -193,3 +203,4 @@ if __name__ == '__main__':
             debug=False,
             ssl_context=context
         )
+

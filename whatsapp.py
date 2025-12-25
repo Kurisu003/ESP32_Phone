@@ -344,6 +344,12 @@ def has_unread_notifications() -> tuple[bool, list[str]]:
         amount = 0
     return amount, unread_names
 
+def hit_esc():
+    driver = _ensure_driver()
+    with _driver_lock:
+        ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+
+
 # if __name__ == "__main__":
     start(headless=False)          # scan QR once
     # List contacts

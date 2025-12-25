@@ -24,7 +24,7 @@
 #define WIFI_CONNECTION_TIMEOUT 5000
 
 constexpr const char *BASE_IP = "154.16.36.201";
-constexpr const char *BASE_PORT = "38823";
+constexpr const char *BASE_PORT = "44887";
 
 struct ChatLine
 {
