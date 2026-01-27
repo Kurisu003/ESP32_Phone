@@ -21,12 +21,15 @@ void setup(void)
   append_wifi("UwU\n121345678");
   append_wifi("FRITZ!Box 4020 YR\nBraunhofer51252");
 
+  // tft.fillScreen(TFT_BLACK);
 
   // Serial.println(wifi_connected);
   // Serial.println("Stored WiFi credentials:");
+  sim_init();
   app_selection_main();
 }
 
 void loop()
 {
+  // sound_loop();
 }

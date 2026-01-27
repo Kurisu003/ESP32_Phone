@@ -6,6 +6,8 @@
 #include "image_data.h"
 #include "calculator.h"
 #include "settings.h"
+#include "phone.h"
+#include "contacts.h"
 
 #include "whatsapp_contacts.h"
 #include "input.h"
@@ -13,12 +15,16 @@
 RLE_Pixel *app_images[] = {
     settings_icon,
     whatsapp_icon,
-    calc_icon};
+    calc_icon,
+    phone_icon,
+    contacts_icon};
 
 int app_images_lengths[] = {
     settings_length,
     whatsapp_length,
-    calc_length};
+    calc_length,
+    phone_length,
+    contacts_length};
 
 int num_app_images = sizeof(app_images) / sizeof(app_images[0]);
 
@@ -41,6 +47,14 @@ void start_app()
         break;
     case 2:
         calculator_main();
+        previously_selected_app = -1;
+        break;
+    case 3:
+        phone_main();
+        previously_selected_app = -1;
+        break;
+    case 4:
+        contacts_main();
         previously_selected_app = -1;
         break;
     }

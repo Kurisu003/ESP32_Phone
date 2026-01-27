@@ -1,7 +1,10 @@
+#ifndef SIM_SHENANIGANS_H
+#define SIM_SHENANIGANS_H
+
 #include <Arduino.h>
 #include "variables.h"
-#define RX_PIN 17
-#define TX_PIN 16
+#define RX_PIN 16
+#define TX_PIN 17
 #define HTTP_DELAY 200
 bool sim_is_initialized = false;
 HardwareSerial modem(2);
@@ -101,7 +104,7 @@ bool wait_for_ip()
     return true;
 }
 
-//! PRIVATE
+//! Public
 bool sim_init()
 {
     Serial.begin(115200);
@@ -255,3 +258,33 @@ String send_http_post_sim(String address, String post_data)
     delay(HTTP_DELAY);
     return response;
 }
+
+//! Public
+void call_number(String number)
+{
+    if (!sim_is_initialized)
+    {
+        bool could_init_sim = sim_init();
+        if (!could_init_sim)
+            return;
+    }
+
+    String command = "ATD" + number + ";";
+
+    send_command("AT+CHFA=1"); // Enable PCM
+    delay(1000);
+    send_command("AT+CPCM=1,0"); // Use standard PCM (not extended)
+    delay(1000);
+    send_command("AT+CPCMEXT=0,1,0,0"); // Set audio path to PCM (crucial for A7670)
+    delay(1000);
+    send_command("AT+CLVL=10"); // Set volume to max
+    send_command(command);
+}
+
+//! Public
+void hangup_call()
+{
+    send_command("ATH");
+}
+
+#endif
