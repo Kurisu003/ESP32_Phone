@@ -25,8 +25,9 @@ void setup(void)
 
   // Serial.println(wifi_connected);
   // Serial.println("Stored WiFi credentials:");
-  sim_init();
+  // sim_init();
   app_selection_main();
+  // call_number("004915561423885");
 }
 
 void loop()

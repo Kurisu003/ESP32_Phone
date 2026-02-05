@@ -271,20 +271,20 @@ void call_number(String number)
 
     String command = "ATD" + number + ";";
 
-    send_command("AT+CHFA=1"); // Enable PCM
+    send_and_wait("AT+CHFA=1", "OK"); // Enable PCM
     delay(1000);
-    send_command("AT+CPCM=1,0"); // Use standard PCM (not extended)
+    send_and_wait("AT+CPCM=1,0", "OK"); // Use standard PCM (not extended)
     delay(1000);
-    send_command("AT+CPCMEXT=0,1,0,0"); // Set audio path to PCM (crucial for A7670)
+    send_and_wait("AT+CPCMEXT=0,1,0,0", "OK"); // Set audio path to PCM (crucial for A7670)
     delay(1000);
-    send_command("AT+CLVL=10"); // Set volume to max
-    send_command(command);
+    send_and_wait("AT+CLVL=10", "OK"); // Set volume to max
+    send_and_wait(command, "OK");
 }
 
 //! Public
 void hangup_call()
 {
-    send_command("ATH");
+    send_and_wait("ATH", "OK");
 }
 
 #endif

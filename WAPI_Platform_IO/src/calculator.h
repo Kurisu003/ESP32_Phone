@@ -86,6 +86,7 @@ void handle_calculator_selection_input()
 //! Public
 void calculator_main()
 {
+    Serial.println("Entered calculator app");
     int previous_x = -1;
     int previous_y = -1;
     String prev_expr = "0";
