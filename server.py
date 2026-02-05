@@ -1,6 +1,5 @@
 # server.py
 import threading
-from server_crypto import decrypt_data, encrypt_data
 import whatsapp
 import json
 from flask import Flask, jsonify, request

@@ -1,1 +1,0 @@
-python3 -m pip install --user --break-system-packages -r requirements.txt

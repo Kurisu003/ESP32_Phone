@@ -1,3 +1,6 @@
+Phone is set to ignore server credentials but for now, these are still needed to start the server (subject to change)
+
+
 BOM:|
 - Microcontroller: https://www.amazon.de/-/en/dp/B0DHRV7784
 - Keypad: https://www.amazon.de/-/en/dp/B08BBXH6NM
