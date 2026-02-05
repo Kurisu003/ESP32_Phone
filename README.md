@@ -1,7 +1,9 @@
 Phone is set to ignore server credentials but for now, these are still needed to start the server (subject to change)
+Note: As I can not open the ports of my router where I live I had to use Private Internet Access (VPN) for the server. If you're not using a VPN remove the sections of server.py where the port of the VPN gets fetched.
 
+Grbr files for PCB will follow
 
-BOM:|
+BOM:
 - Microcontroller: https://www.amazon.de/-/en/dp/B0DHRV7784
 - Keypad: https://www.amazon.de/-/en/dp/B08BBXH6NM
 - Screen: https://www.amazon.de/-/en/dp/B078JBBPXK?ref=ppx_yo2ov_dt_b_fed_asin_title
