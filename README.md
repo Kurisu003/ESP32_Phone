@@ -1,7 +1,8 @@
 Phone is set to ignore server credentials but for now, these are still needed to start the server (subject to change)
 
+Grbr files for PCB will follow
 
-BOM:|
+BOM:
 - Microcontroller: https://www.amazon.de/-/en/dp/B0DHRV7784
 - Keypad: https://www.amazon.de/-/en/dp/B08BBXH6NM
 - Screen: https://www.amazon.de/-/en/dp/B078JBBPXK?ref=ppx_yo2ov_dt_b_fed_asin_title
