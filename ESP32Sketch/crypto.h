@@ -1,1 +1,0 @@
-c:\Users\danie\Desktop\Whatsapp API\ESP32Sketch\sim_stuff.ino
